@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(if grep -q \"ساعات العمل\" \"$file\")",
+      "Bash(for file in business/*.html ar/business/*.html)",
+      "Bash(if grep -q \"&amp;amp;\" \"$file\")",
+      "Bash(if grep -q '<span class=\"\"review-time\"\"></span>' \"$file\")",
+      "Bash(for file in doha-veterinary-services.html dragon-animal-care-center.html fatpawz-pet-salon-supplies-mobile-grooming.html)",
+      "Bash(if [ -f \"$file\" ])",
+      "Bash(if [ -f \"$dir/index.html\" ])",
+      "Bash(if [ -f \"ar/$dir/index.html\" ])",
+      "Bash(for file in index.html ar/index.html */index.html ar/*/index.html business/*.html ar/business/*.html)",
+      "Bash(__NEW_LINE__ perl -i -pe 's|<meta name=\"\"description\"\" content=\"\"خدمات العناية المهنية بالحيوانات الأليفة في قطر\"\">|<meta name=\"\"description\"\" content=\"\"خدمات العناية المهنية بالحيوانات الأليفة في قطر - قص شعر، استحمام، تنظيف أذن وخدمات تجميل للكلاب والقطط\"\">|' ar/grooming/index.html)",
+      "Bash(__NEW_LINE__ perl -i -pe 's|<meta name=\"\"description\"\" content=\"\"مرافق رعاية الحيوانات الأليفة النهارية في قطر\"\">|<meta name=\"\"description\"\" content=\"\"مرافق رعاية الحيوانات الأليفة النهارية والإيواء في قطر - رعاية آمنة ومريحة لكلبك أو قطتك أثناء السفر\"\">|' ar/boarding/index.html)",
+      "Bash(__NEW_LINE__ perl -i -pe 's|<meta name=\"\"description\"\" content=\"\"خدمات رعاية الحيوانات المنزلية في قطر\"\">|<meta name=\"\"description\"\" content=\"\"خدمات رعاية الحيوانات المنزلية في قطر - جليسات محترفون لرعاية حيوانك الأليف في منزلك بأمان وراحة\"\">|' ar/pet-sitting/index.html)",
+      "Bash(__NEW_LINE__ echo \"Updated grooming, boarding, pet-sitting\")",
+      "Bash(__NEW_LINE__ perl -i -pe 's|<meta name=\"\"description\"\" content=\"\"خدمات نقل الحيوانات الأليفة الدولية في قطر\"\">|<meta name=\"\"description\"\" content=\"\"خدمات نقل الحيوانات الأليفة الدولية في قطر - مساعدة احترافية لنقل حيوانك الأليف بأمان إلى أي دولة\"\">|' ar/relocation/index.html)",
+      "Bash(__NEW_LINE__ perl -i -pe 's|<meta name=\"\"description\"\" content=\"\"المقاهي الصديقة للحيوانات الأليفة في قطر\"\">|<meta name=\"\"description\"\" content=\"\"المقاهي الصديقة للحيوانات الأليفة في قطر - استمتع بالقهوة مع كلبك في أفضل المقاهي التي ترحب بالحيوانات\"\">|' ar/pet-friendly-cafes/index.html)",
+      "Bash(__NEW_LINE__ echo \"Updated rescue, relocation, pet-friendly-cafes\")",
+      "Bash(__NEW_LINE__ perl -i -pe 's|<meta name=\"\"description\"\" content=\"\"الحدائق والمساحات الخارجية الصديقة للحيوانات في قطر\"\">|<meta name=\"\"description\"\" content=\"\"الحدائق والمساحات الخارجية الصديقة للحيوانات في قطر - أفضل الأماكن للتنزه واللعب مع كلبك بأمان\"\">|' ar/pet-friendly-parks/index.html)",
+      "Bash(__NEW_LINE__ perl -i -pe 's|<meta name=\"\"description\"\" content=\"\"خدمات تدريب احترافية للحيوانات الأليفة في قطر\"\">|<meta name=\"\"description\"\" content=\"\"خدمات تدريب احترافية للحيوانات الأليفة في قطر - مدربون محترفون لتدريب الطاعة والسلوك للكلاب والقطط\"\">|' ar/training/index.html)",
+      "Bash(__NEW_LINE__ echo \"Updated pet-friendly-hotels, pet-friendly-parks, training\")",
+      "Bash({ grep -l \"og:title\" index.html)",
+      "Bash(wc -l })",
+      "Bash(awk:*)",
+      "Bash(echo:*)",
+      "Bash(cat:*)",
+      "Bash(do if ! grep -q '\"\"\"\"telephone\"\"\"\"' \"$file\")",
+      "Bash(then echo \"$file\" fi done)",
+      "Bash(bash:*)",
+      "Bash(file=\"vee-paws-for-pets-care.html\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
