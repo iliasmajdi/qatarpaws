@@ -23,6 +23,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="preload" href="/css/style.css" as="style">
+<link rel="dns-prefetch" href="https://fonts.googleapis.com">
+<link rel="dns-prefetch" href="https://fonts.gstatic.com">
+<link rel="dns-prefetch" href="https://lh3.googleusercontent.com">
+<link rel="dns-prefetch" href="https://maps.google.com">
 <link rel="stylesheet" href="/css/style.css">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -55,16 +60,28 @@
   ]
 }
 </script>
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX');
+</script>
+<!-- Google Search Console -->
+<meta name="google-site-verification" content="PLACEHOLDER_VERIFICATION_CODE">
 </head>
 <body>
-<header class="header">
+<a href="#main-content" class="skip-link">تخطى إلى المحتوى الرئيسي</a>
+<header class="header" role="banner">
 <div class="header-inner">
 <a href="/ar/" class="logo">
 <div class="logo-icon">🐾</div>
 <span class="logo-text">QatarPaws</span>
 </a>
-<div class="header-nav">
+<div class="header-nav" role="navigation" aria-label="Main navigation">
 <a href="/ar/#categories" class="nav-link">الفئات</a>
+<a href="/ar/blog/" class="nav-link">المدونة</a>
 <a href="/" class="lang-btn">English</a>
 </div>
 </div>
@@ -153,7 +170,7 @@ First of all, before arriving, we sent an email to the hotel requesting a gestur
 </div>
 </div>
 <div class="ad-zone"><div class="ad-placeholder">Google AdSense — Responsive Display Ad</div></div>
-<footer class="footer">
+<footer class="footer" role="contentinfo">
 <div class="footer-inner">
 <div class="footer-grid">
 <div>
@@ -169,7 +186,7 @@ First of all, before arriving, we sent an email to the hotel requesting a gestur
 <div>
 <h3>روابط سريعة</h3>
 <ul class="footer-links">
-<li><a href="/ar/">الرئيسية</a></li>
+<li><a href="/ar/">الرئيسية</a></li><li><a href="/ar/blog/">المدونة</a></li>
 <li><a href="/">English</a></li>
 </ul>
 </div>

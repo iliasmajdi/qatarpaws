@@ -28,7 +28,9 @@
       "Bash(do if ! grep -q '\"\"\"\"telephone\"\"\"\"' \"$file\")",
       "Bash(then echo \"$file\" fi done)",
       "Bash(bash:*)",
-      "Bash(file=\"vee-paws-for-pets-care.html\")"
+      "Bash(file=\"vee-paws-for-pets-care.html\")",
+      "Bash(python generate-search-data.py:*)",
+      "Bash(python reorder-homepage.py:*)"
     ],
     "deny": [],
     "ask": []

@@ -2,6 +2,10 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url><loc>https://qatarpaws.com/</loc><lastmod>2026-04-11</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
 <url><loc>https://qatarpaws.com/ar/</loc><lastmod>2026-04-11</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+<url><loc>https://qatarpaws.com/about.html</loc><lastmod>2026-04-12</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+<url><loc>https://qatarpaws.com/ar/about.html</loc><lastmod>2026-04-12</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+<url><loc>https://qatarpaws.com/blog/</loc><lastmod>2026-04-12</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+<url><loc>https://qatarpaws.com/ar/blog/</loc><lastmod>2026-04-12</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
 <url><loc>https://qatarpaws.com/vets/</loc><lastmod>2026-04-11</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 <url><loc>https://qatarpaws.com/ar/vets/</loc><lastmod>2026-04-11</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 <url><loc>https://qatarpaws.com/pet-shops/</loc><lastmod>2026-04-11</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
