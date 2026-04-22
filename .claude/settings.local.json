@@ -53,7 +53,19 @@
       "Bash(curl -s --max-time 15 https://qatarpaws.com/)",
       "Bash(curl -sI --max-time 10 \"https://qatarpaws.com/QatarPaws%20Homepage%20Demo%20_standalone_.html\")",
       "Bash(curl -s --max-time 10 \"https://qatarpaws.com/.gitignore\")",
-      "Bash(curl -sI --max-time 10 \"https://qatarpaws.com/sitemap.xml.bak\")"
+      "Bash(curl -sI --max-time 10 \"https://qatarpaws.com/sitemap.xml.bak\")",
+      "Bash(curl -sI --max-time 10 \"https://qatarpaws.com/ar/business/healthy-pet-center-%D8%B9%D9%8A%D8%A7%D8%AF%D8%A9-%D9%87%D9%8A%D9%84%D8%AB%D9%8A-%D8%A8%D8%AA-%D8%B3%D9%86%D8%AA%D8%B1.html\")",
+      "Bash(curl -sI --max-time 10 \"https://qatarpaws.com/ar/business/healthy-pet-center-%D8%B9%D9%8A%D8%A7%D8%AF%D8%A9-%D9%87%D9%8A%D9%84%D8%AB%D9%8A-%D8%A8%D8%AA-%D8%B3%D9%86%D8%AA%D8%B1\")",
+      "Bash(curl -sIL --max-time 10 \"https://qatarpaws.com/business/healthy-pet-center-%D8%B9%D9%8A%D8%A7%D8%AF%D8%A9-%D9%87%D9%8A%D9%84%D8%AB%D9%8A-%D8%A8%D8%AA-%D8%B3%D9%86%D8%AA%D8%B1.html\")",
+      "Bash(python -X utf8)",
+      "Bash(PYTHONIOENCODING=utf-8 python -X utf8 scripts/fix_mojibake_filenames.py)",
+      "Bash(PYTHONIOENCODING=utf-8 python -X utf8 scripts/fix_mojibake_filenames.py --apply)",
+      "Bash(git add *)",
+      "Bash(git reset *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(curl -sI --max-time 15 \"https://qatarpaws.com/ar/business/healthy-pet-center-%D8%B9%D9%8A%D8%A7%D8%AF%D8%A9-%D9%87%D9%8A%D9%84%D8%AB%D9%8A-%D8%A8%D8%AA-%D8%B3%D9%86%D8%AA%D8%B1\")",
+      "Bash(curl -sL --max-time 15 \"https://qatarpaws.com/ar/business/healthy-pet-center-%D8%B9%D9%8A%D8%A7%D8%AF%D8%A9-%D9%87%D9%8A%D9%84%D8%AB%D9%8A-%D8%A8%D8%AA-%D8%B3%D9%86%D8%AA%D8%B1\")"
     ],
     "deny": [],
     "ask": []
