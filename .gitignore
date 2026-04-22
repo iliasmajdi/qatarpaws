@@ -1,0 +1,10 @@
+*.bak
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+_tmp_*
+scripts/__pycache__/
+node_modules/

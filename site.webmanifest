@@ -1,0 +1,16 @@
+{
+  "name": "QatarPaws — The Pet Guide to Qatar",
+  "short_name": "QatarPaws",
+  "description": "Qatar's bilingual directory of pet services.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F3EBDD",
+  "theme_color": "#F6F1E8",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

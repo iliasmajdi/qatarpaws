@@ -30,7 +30,12 @@
       "Bash(bash:*)",
       "Bash(file=\"vee-paws-for-pets-care.html\")",
       "Bash(python generate-search-data.py:*)",
-      "Bash(python reorder-homepage.py:*)"
+      "Bash(python reorder-homepage.py:*)",
+      "Bash(python -c ' *)",
+      "Bash(python scripts/rebuild_site.py)",
+      "Bash(python -X utf8 -c ' *)",
+      "Bash(git checkout *)",
+      "Bash(python scripts/generate-search-data.py)"
     ],
     "deny": [],
     "ask": []

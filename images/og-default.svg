@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+<defs>
+<pattern id="grain" x="0" y="0" width="7" height="7" patternUnits="userSpaceOnUse">
+<circle cx="1" cy="1" r="0.5" fill="rgba(120,80,40,.14)"/>
+<circle cx="4" cy="3" r="0.5" fill="rgba(120,80,40,.10)"/>
+</pattern>
+</defs>
+<rect width="1200" height="630" fill="#F3EBDD"/>
+<rect width="1200" height="630" fill="url(#grain)"/>
+<g transform="translate(120 160)">
+<circle cx="60" cy="60" r="58" fill="#141210"/>
+<g fill="#F6F1E8">
+<ellipse cx="38" cy="46" rx="8" ry="10"/>
+<ellipse cx="60" cy="37" rx="8" ry="10"/>
+<ellipse cx="82" cy="46" rx="8" ry="10"/>
+<ellipse cx="92" cy="66" rx="7" ry="9"/>
+<path d="M60 55c-15 0-25 11-25 23 0 9 7 13 15 13 5 0 8-2 10-2s5 2 10 2c8 0 15-4 15-13 0-12-10-23-25-23z"/>
+</g>
+<circle cx="88" cy="23" r="4" fill="#7B1E1E"/>
+</g>
+<text x="120" y="380" font-family="Georgia, serif" font-size="96" font-weight="500" fill="#141210" letter-spacing="-2">QatarPaws</text>
+<text x="120" y="440" font-family="Georgia, serif" font-size="36" font-style="italic" fill="#7B1E1E">The Pet Guide to Qatar</text>
+<text x="120" y="510" font-family="monospace" font-size="20" fill="#5a4838" letter-spacing="3">267 VERIFIED PLACES · EN · AR</text>
+</svg>

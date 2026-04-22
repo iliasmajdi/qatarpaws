@@ -3,6 +3,7 @@ import os
 import json
 import re
 import glob
+import html as htmllib
 from html.parser import HTMLParser
 
 class BusinessExtractor(HTMLParser):
@@ -49,11 +50,15 @@ class BusinessExtractor(HTMLParser):
             self.json_content = ""
 
 def extract_category_from_breadcrumb(html_content):
-    """Extract category name from breadcrumb"""
-    # Look for breadcrumb link pattern: href="/category/">Category Name</a>
+    """Extract category name from breadcrumb (supports new + legacy markup)."""
+    # New markup: <a href="/vets/">Veterinary Clinics</a><span class="sep">›</span><span>...
+    match = re.search(r'<nav class="breadcrumb"[^>]*>.*?<a href="(?:/ar)?/([^/]+)/"[^>]*>([^<]+)</a>', html_content, re.DOTALL)
+    if match:
+        return htmllib.unescape(match.group(2).strip())
+    # Legacy: <a href="/category/">Label</a> <span>›</span> <span>
     match = re.search(r'href="/([^/]+)/">([^<]+)</a>\s*<span>›</span>\s*<span>', html_content)
     if match:
-        return match.group(2).strip()
+        return htmllib.unescape(match.group(2).strip())
     return "Other"
 
 def extract_business_data(filepath):
