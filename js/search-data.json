@@ -180,21 +180,21 @@
     "lang": "en"
   },
   {
-    "name": "مزرعة علي الجاسم Ali Al-jassim Farm",
-    "phone": "7011 5117",
-    "rating": 5.0,
-    "reviews": 3,
-    "category": "Rescue & Adoption",
-    "url": "/┘à╪▓╪▒╪╣╪⌐-╪╣┘ä┘è-╪º┘ä╪¼╪º╪│┘à-ali-al-jassim-farm.html",
-    "lang": "en"
-  },
-  {
     "name": "صيدلية سنام البيطرية Sanam veterinary pharmacy",
     "phone": "7447 6696",
     "rating": 5.0,
     "reviews": 6,
     "category": "Veterinary Clinics",
-    "url": "/╪╡┘è╪»┘ä┘è╪⌐-╪│┘å╪º┘à-╪º┘ä╪¿┘è╪╖╪▒┘è╪⌐-sanam-veterinary-pharmacy.html",
+    "url": "/صيدلية-سنام-البيطرية-sanam-veterinary-pharmacy.html",
+    "lang": "en"
+  },
+  {
+    "name": "مزرعة علي الجاسم Ali Al-jassim Farm",
+    "phone": "7011 5117",
+    "rating": 5.0,
+    "reviews": 3,
+    "category": "Rescue & Adoption",
+    "url": "/مزرعة-علي-الجاسم-ali-al-jassim-farm.html",
     "lang": "en"
   },
   {
@@ -378,21 +378,21 @@
     "lang": "ar"
   },
   {
-    "name": "مزرعة علي الجاسم Ali Al-jassim Farm",
-    "phone": "7011 5117",
-    "rating": 5.0,
-    "reviews": 3,
-    "category": "الرئيسية",
-    "url": "/┘à╪▓╪▒╪╣╪⌐-╪╣┘ä┘è-╪º┘ä╪¼╪º╪│┘à-ali-al-jassim-farm.html",
-    "lang": "ar"
-  },
-  {
     "name": "صيدلية سنام البيطرية Sanam veterinary pharmacy",
     "phone": "7447 6696",
     "rating": 5.0,
     "reviews": 6,
     "category": "الرئيسية",
-    "url": "/╪╡┘è╪»┘ä┘è╪⌐-╪│┘å╪º┘à-╪º┘ä╪¿┘è╪╖╪▒┘è╪⌐-sanam-veterinary-pharmacy.html",
+    "url": "/صيدلية-سنام-البيطرية-sanam-veterinary-pharmacy.html",
+    "lang": "ar"
+  },
+  {
+    "name": "مزرعة علي الجاسم Ali Al-jassim Farm",
+    "phone": "7011 5117",
+    "rating": 5.0,
+    "reviews": 3,
+    "category": "الرئيسية",
+    "url": "/مزرعة-علي-الجاسم-ali-al-jassim-farm.html",
     "lang": "ar"
   },
   {
@@ -464,7 +464,7 @@
     "rating": 4.9,
     "reviews": 778,
     "category": "Parks & Outdoor",
-    "url": "/swiss├┤tel-corniche-park-towers-doha.html",
+    "url": "/swissôtel-corniche-park-towers-doha.html",
     "lang": "en"
   },
   {
@@ -536,7 +536,7 @@
     "rating": 4.9,
     "reviews": 778,
     "category": "الرئيسية",
-    "url": "/swiss├┤tel-corniche-park-towers-doha.html",
+    "url": "/swissôtel-corniche-park-towers-doha.html",
     "lang": "ar"
   },
   {
@@ -743,7 +743,7 @@
     "rating": 4.8,
     "reviews": 154,
     "category": "Veterinary Clinics",
-    "url": "/╪╣┘è╪º╪»┘ç-╪º┘ê╪▒┘â╪│-┘ä┘ä╪╡┘é┘ê╪▒-oryx-falcon-veterinarian.html",
+    "url": "/عياده-اوركس-للصقور-oryx-falcon-veterinarian.html",
     "lang": "en"
   },
   {
@@ -950,7 +950,7 @@
     "rating": 4.8,
     "reviews": 154,
     "category": "الرئيسية",
-    "url": "/╪╣┘è╪º╪»┘ç-╪º┘ê╪▒┘â╪│-┘ä┘ä╪╡┘é┘ê╪▒-oryx-falcon-veterinarian.html",
+    "url": "/عياده-اوركس-للصقور-oryx-falcon-veterinarian.html",
     "lang": "ar"
   },
   {
@@ -1364,7 +1364,7 @@
     "rating": 4.6,
     "reviews": 56,
     "category": "Veterinary Clinics",
-    "url": "/the-vet-experts-al-furousiya-╪º┘ä╪«╪¿╪▒╪º╪í-╪º┘ä╪¿┘è╪╖╪▒┘è┘è┘å-╪º┘ä╪▒┘è╪º┘å-╪º┘ä┘ü╪▒┘ê╪│.html",
+    "url": "/the-vet-experts-al-furousiya-الخبراء-البيطريين-الريان-الفروس.html",
     "lang": "en"
   },
   {
@@ -1517,7 +1517,7 @@
     "rating": 4.6,
     "reviews": 56,
     "category": "الرئيسية",
-    "url": "/the-vet-experts-al-furousiya-╪º┘ä╪«╪¿╪▒╪º╪í-╪º┘ä╪¿┘è╪╖╪▒┘è┘è┘å-╪º┘ä╪▒┘è╪º┘å-╪º┘ä┘ü╪▒┘ê╪│.html",
+    "url": "/the-vet-experts-al-furousiya-الخبراء-البيطريين-الريان-الفروس.html",
     "lang": "ar"
   },
   {
@@ -1589,7 +1589,7 @@
     "rating": 4.5,
     "reviews": 30,
     "category": "Veterinary Clinics",
-    "url": "/biovet-for-veterinary-trading-╪╡┘è╪»┘ä┘è╪⌐-╪¿┘è┘ê┘ü╪¬-╪º┘ä╪¿┘è╪╖╪▒┘è╪⌐-╪º┘ä┘ü╪▒┘ê╪│┘è╪⌐.html",
+    "url": "/biovet-for-veterinary-trading-صيدلية-بيوفت-البيطرية-الفروسية.html",
     "lang": "en"
   },
   {
@@ -1625,7 +1625,7 @@
     "rating": 4.5,
     "reviews": 244,
     "category": "Pet-Friendly Cafés",
-    "url": "/fat-cat-caf├⌐.html",
+    "url": "/fat-cat-café.html",
     "lang": "en"
   },
   {
@@ -1706,7 +1706,7 @@
     "rating": 4.5,
     "reviews": 146,
     "category": "Veterinary Clinics",
-    "url": "/nova-veterinary-hospital-┘à╪│╪¬╪┤┘ü┘ë-┘å┘ê┘ü╪º-╪º┘ä╪¿┘è╪╖╪▒┘è.html",
+    "url": "/nova-veterinary-hospital-مستشفى-نوفا-البيطري.html",
     "lang": "en"
   },
   {
@@ -1755,21 +1755,21 @@
     "lang": "en"
   },
   {
-    "name": "مركز عفرين للصقور/Afreen Falcon Center",
-    "phone": "6004 7777",
-    "rating": 4.5,
-    "reviews": 50,
-    "category": "Veterinary Clinics",
-    "url": "/┘à╪▒┘â╪▓-╪╣┘ü╪▒┘è┘å-┘ä┘ä╪╡┘é┘ê╪▒afreen-falcon-center.html",
-    "lang": "en"
-  },
-  {
     "name": "عيادة للصقور",
     "phone": "5531 6925",
     "rating": 4.5,
     "reviews": 17,
     "category": "Veterinary Clinics",
-    "url": "/╪╣┘è╪º╪»╪⌐-┘ä┘ä╪╡┘é┘ê╪▒.html",
+    "url": "/عيادة-للصقور.html",
+    "lang": "en"
+  },
+  {
+    "name": "مركز عفرين للصقور/Afreen Falcon Center",
+    "phone": "6004 7777",
+    "rating": 4.5,
+    "reviews": 50,
+    "category": "Veterinary Clinics",
+    "url": "/مركز-عفرين-للصقورafreen-falcon-center.html",
     "lang": "en"
   },
   {
@@ -1814,7 +1814,7 @@
     "rating": 4.5,
     "reviews": 30,
     "category": "الرئيسية",
-    "url": "/biovet-for-veterinary-trading-╪╡┘è╪»┘ä┘è╪⌐-╪¿┘è┘ê┘ü╪¬-╪º┘ä╪¿┘è╪╖╪▒┘è╪⌐-╪º┘ä┘ü╪▒┘ê╪│┘è╪⌐.html",
+    "url": "/biovet-for-veterinary-trading-صيدلية-بيوفت-البيطرية-الفروسية.html",
     "lang": "ar"
   },
   {
@@ -1850,7 +1850,7 @@
     "rating": 4.5,
     "reviews": 244,
     "category": "الرئيسية",
-    "url": "/fat-cat-caf├⌐.html",
+    "url": "/fat-cat-café.html",
     "lang": "ar"
   },
   {
@@ -1931,7 +1931,7 @@
     "rating": 4.5,
     "reviews": 146,
     "category": "الرئيسية",
-    "url": "/nova-veterinary-hospital-┘à╪│╪¬╪┤┘ü┘ë-┘å┘ê┘ü╪º-╪º┘ä╪¿┘è╪╖╪▒┘è.html",
+    "url": "/nova-veterinary-hospital-مستشفى-نوفا-البيطري.html",
     "lang": "ar"
   },
   {
@@ -1980,21 +1980,21 @@
     "lang": "ar"
   },
   {
-    "name": "مركز عفرين للصقور/Afreen Falcon Center",
-    "phone": "6004 7777",
-    "rating": 4.5,
-    "reviews": 50,
-    "category": "الرئيسية",
-    "url": "/┘à╪▒┘â╪▓-╪╣┘ü╪▒┘è┘å-┘ä┘ä╪╡┘é┘ê╪▒afreen-falcon-center.html",
-    "lang": "ar"
-  },
-  {
     "name": "عيادة للصقور",
     "phone": "5531 6925",
     "rating": 4.5,
     "reviews": 17,
     "category": "الرئيسية",
-    "url": "/╪╣┘è╪º╪»╪⌐-┘ä┘ä╪╡┘é┘ê╪▒.html",
+    "url": "/عيادة-للصقور.html",
+    "lang": "ar"
+  },
+  {
+    "name": "مركز عفرين للصقور/Afreen Falcon Center",
+    "phone": "6004 7777",
+    "rating": 4.5,
+    "reviews": 50,
+    "category": "الرئيسية",
+    "url": "/مركز-عفرين-للصقورafreen-falcon-center.html",
     "lang": "ar"
   },
   {
@@ -2021,7 +2021,7 @@
     "rating": 4.4,
     "reviews": 180,
     "category": "Veterinary Clinics",
-    "url": "/first-vet-┘ü╪▒╪│╪¬-╪º┘ä╪¿┘è╪╖╪▒┘è╪⌐.html",
+    "url": "/first-vet-فرست-البيطرية.html",
     "lang": "en"
   },
   {
@@ -2138,7 +2138,7 @@
     "rating": 4.4,
     "reviews": 14,
     "category": "Pet Shops & Stores",
-    "url": "/╪º┘ä╪¿╪¡┘è╪▒╪⌐-┘ä┘ä╪╖┘è┘ê╪▒-┘ê╪º╪│┘à╪º┘â-╪º┘ä╪▓┘è┘å╪⌐.html",
+    "url": "/البحيرة-للطيور-واسماك-الزينة.html",
     "lang": "en"
   },
   {
@@ -2165,7 +2165,7 @@
     "rating": 4.4,
     "reviews": 180,
     "category": "الرئيسية",
-    "url": "/first-vet-┘ü╪▒╪│╪¬-╪º┘ä╪¿┘è╪╖╪▒┘è╪⌐.html",
+    "url": "/first-vet-فرست-البيطرية.html",
     "lang": "ar"
   },
   {
@@ -2282,7 +2282,7 @@
     "rating": 4.4,
     "reviews": 14,
     "category": "الرئيسية",
-    "url": "/╪º┘ä╪¿╪¡┘è╪▒╪⌐-┘ä┘ä╪╖┘è┘ê╪▒-┘ê╪º╪│┘à╪º┘â-╪º┘ä╪▓┘è┘å╪⌐.html",
+    "url": "/البحيرة-للطيور-واسماك-الزينة.html",
     "lang": "ar"
   },
   {
@@ -2300,7 +2300,7 @@
     "rating": 4.3,
     "reviews": 258,
     "category": "Veterinary Clinics",
-    "url": "/al-galayel-equine-center-l-┘à╪▒┘â╪▓-╪º┘ä┘é┘ä╪º┘è┘ä-┘ä┘ä╪«┘è┘ä.html",
+    "url": "/al-galayel-equine-center-l-مركز-القلايل-للخيل.html",
     "lang": "en"
   },
   {
@@ -2336,7 +2336,7 @@
     "rating": 4.3,
     "reviews": 1089,
     "category": "Pet-Friendly Cafés",
-    "url": "/caf├⌐-999.html",
+    "url": "/café-999.html",
     "lang": "en"
   },
   {
@@ -2345,7 +2345,7 @@
     "rating": 4.3,
     "reviews": 377,
     "category": "Pet-Friendly Cafés",
-    "url": "/caf├⌐-pouchkine-qatar.html",
+    "url": "/café-pouchkine-qatar.html",
     "lang": "en"
   },
   {
@@ -2354,7 +2354,7 @@
     "rating": 4.3,
     "reviews": 185,
     "category": "Veterinary Clinics",
-    "url": "/healthy-pet-center-╪╣┘è╪º╪»╪⌐-┘ç┘è┘ä╪½┘è-╪¿╪¬-╪│┘å╪¬╪▒.html",
+    "url": "/healthy-pet-center-عيادة-هيلثي-بت-سنتر.html",
     "lang": "en"
   },
   {
@@ -2399,7 +2399,7 @@
     "rating": 4.3,
     "reviews": 3,
     "category": "Veterinary Clinics",
-    "url": "/umm-salal-veterinarian-center┘à╪▒┘â╪▓-╪º┘à-╪╡┘ä╪º┘ä-╪º┘ä╪¿┘è╪╖╪▒┘è.html",
+    "url": "/umm-salal-veterinarian-centerمركز-ام-صلال-البيطري.html",
     "lang": "en"
   },
   {
@@ -2417,7 +2417,7 @@
     "rating": 4.3,
     "reviews": 341,
     "category": "Pet Shops & Stores",
-    "url": "/world-of-birds-pet-aquatic-pet-store-╪╣╪º┘ä┘à-╪º┘ä╪╖┘è┘ê╪▒.html",
+    "url": "/world-of-birds-pet-aquatic-pet-store-عالم-الطيور.html",
     "lang": "en"
   },
   {
@@ -2435,7 +2435,7 @@
     "rating": 4.3,
     "reviews": 258,
     "category": "الرئيسية",
-    "url": "/al-galayel-equine-center-l-┘à╪▒┘â╪▓-╪º┘ä┘é┘ä╪º┘è┘ä-┘ä┘ä╪«┘è┘ä.html",
+    "url": "/al-galayel-equine-center-l-مركز-القلايل-للخيل.html",
     "lang": "ar"
   },
   {
@@ -2471,7 +2471,7 @@
     "rating": 4.3,
     "reviews": 1089,
     "category": "الرئيسية",
-    "url": "/caf├⌐-999.html",
+    "url": "/café-999.html",
     "lang": "ar"
   },
   {
@@ -2480,7 +2480,7 @@
     "rating": 4.3,
     "reviews": 377,
     "category": "الرئيسية",
-    "url": "/caf├⌐-pouchkine-qatar.html",
+    "url": "/café-pouchkine-qatar.html",
     "lang": "ar"
   },
   {
@@ -2489,7 +2489,7 @@
     "rating": 4.3,
     "reviews": 185,
     "category": "الرئيسية",
-    "url": "/healthy-pet-center-╪╣┘è╪º╪»╪⌐-┘ç┘è┘ä╪½┘è-╪¿╪¬-╪│┘å╪¬╪▒.html",
+    "url": "/healthy-pet-center-عيادة-هيلثي-بت-سنتر.html",
     "lang": "ar"
   },
   {
@@ -2534,7 +2534,7 @@
     "rating": 4.3,
     "reviews": 3,
     "category": "الرئيسية",
-    "url": "/umm-salal-veterinarian-center┘à╪▒┘â╪▓-╪º┘à-╪╡┘ä╪º┘ä-╪º┘ä╪¿┘è╪╖╪▒┘è.html",
+    "url": "/umm-salal-veterinarian-centerمركز-ام-صلال-البيطري.html",
     "lang": "ar"
   },
   {
@@ -2552,7 +2552,7 @@
     "rating": 4.3,
     "reviews": 341,
     "category": "الرئيسية",
-    "url": "/world-of-birds-pet-aquatic-pet-store-╪╣╪º┘ä┘à-╪º┘ä╪╖┘è┘ê╪▒.html",
+    "url": "/world-of-birds-pet-aquatic-pet-store-عالم-الطيور.html",
     "lang": "ar"
   },
   {
@@ -2732,7 +2732,7 @@
     "rating": 4.1,
     "reviews": 67,
     "category": "Veterinary Clinics",
-    "url": "/╪╡┘è╪»┘ä┘è╪⌐-╪º┘ä╪¼╪▓┘è╪▒╪⌐-╪º┘ä╪¿┘è╪╖╪▒┘è╪⌐-al-jazeera-veterinary-rayan-branch.html",
+    "url": "/صيدلية-الجزيرة-البيطرية-al-jazeera-veterinary-rayan-branch.html",
     "lang": "en"
   },
   {
@@ -2786,7 +2786,7 @@
     "rating": 4.1,
     "reviews": 67,
     "category": "الرئيسية",
-    "url": "/╪╡┘è╪»┘ä┘è╪⌐-╪º┘ä╪¼╪▓┘è╪▒╪⌐-╪º┘ä╪¿┘è╪╖╪▒┘è╪⌐-al-jazeera-veterinary-rayan-branch.html",
+    "url": "/صيدلية-الجزيرة-البيطرية-al-jazeera-veterinary-rayan-branch.html",
     "lang": "ar"
   },
   {
@@ -2804,7 +2804,7 @@
     "rating": 4.0,
     "reviews": 121,
     "category": "Veterinary Clinics",
-    "url": "/al-rayyan-veterinary-center-┘à╪▒┘â╪▓-╪º┘ä╪▒┘è╪º┘å-╪º┘ä╪¿┘è╪╖╪▒┘è.html",
+    "url": "/al-rayyan-veterinary-center-مركز-الريان-البيطري.html",
     "lang": "en"
   },
   {
@@ -2930,7 +2930,7 @@
     "rating": 4.0,
     "reviews": 110,
     "category": "Pet Shops & Stores",
-    "url": "/┘à┘à┘ä┘â╪⌐-╪º┘ä╪╖┘è┘ê╪▒-╪│┘ê┘é-╪º┘ä╪╣┘ä┘è-kingdom-of-birds.html",
+    "url": "/مملكة-الطيور-سوق-العلي-kingdom-of-birds.html",
     "lang": "en"
   },
   {
@@ -2948,7 +2948,7 @@
     "rating": 4.0,
     "reviews": 121,
     "category": "الرئيسية",
-    "url": "/al-rayyan-veterinary-center-┘à╪▒┘â╪▓-╪º┘ä╪▒┘è╪º┘å-╪º┘ä╪¿┘è╪╖╪▒┘è.html",
+    "url": "/al-rayyan-veterinary-center-مركز-الريان-البيطري.html",
     "lang": "ar"
   },
   {
@@ -3074,7 +3074,7 @@
     "rating": 4.0,
     "reviews": 110,
     "category": "الرئيسية",
-    "url": "/┘à┘à┘ä┘â╪⌐-╪º┘ä╪╖┘è┘ê╪▒-╪│┘ê┘é-╪º┘ä╪╣┘ä┘è-kingdom-of-birds.html",
+    "url": "/مملكة-الطيور-سوق-العلي-kingdom-of-birds.html",
     "lang": "ar"
   },
   {
@@ -3254,7 +3254,7 @@
     "rating": 3.8,
     "reviews": 4,
     "category": "Veterinary Clinics",
-    "url": "/╪╣┘è╪º╪»╪⌐-┘ü╪º╪▒╪│-╪º┘ä╪¬┘à┘è┘à┘è-╪º┘ä╪¿┘è╪╖╪▒┘è.html",
+    "url": "/عيادة-فارس-التميمي-البيطري.html",
     "lang": "en"
   },
   {
@@ -3326,7 +3326,7 @@
     "rating": 3.8,
     "reviews": 4,
     "category": "الرئيسية",
-    "url": "/╪╣┘è╪º╪»╪⌐-┘ü╪º╪▒╪│-╪º┘ä╪¬┘à┘è┘à┘è-╪º┘ä╪¿┘è╪╖╪▒┘è.html",
+    "url": "/عيادة-فارس-التميمي-البيطري.html",
     "lang": "ar"
   },
   {
@@ -3605,7 +3605,7 @@
     "rating": 0.0,
     "reviews": 0,
     "category": "Pet Shops & Stores",
-    "url": "/╪»╪º╪▒-╪º┘ä╪¡┘è┘ê╪º┘å-dar-animal-pet-shop.html",
+    "url": "/دار-الحيوان-dar-animal-pet-shop.html",
     "lang": "en"
   },
   {
@@ -3650,7 +3650,7 @@
     "rating": 0.0,
     "reviews": 0,
     "category": "الرئيسية",
-    "url": "/╪»╪º╪▒-╪º┘ä╪¡┘è┘ê╪º┘å-dar-animal-pet-shop.html",
+    "url": "/دار-الحيوان-dar-animal-pet-shop.html",
     "lang": "ar"
   }
 ]

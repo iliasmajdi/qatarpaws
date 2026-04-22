@@ -330,13 +330,12 @@ def extract_business(filepath: Path) -> dict | None:
         return None
 
     b: dict = {"file": str(filepath)}
-    # canonical -> URL
-    m = CANON_RE.search(raw)
-    b["canonical"] = m.group(1) if m else ""
     # language
     b["lang"] = "ar" if "/ar/" in str(filepath).replace("\\", "/") else "en"
-    # slug
+    # slug from filesystem (source of truth; canonical in HTML may be stale after renames)
     b["slug"] = filepath.stem
+    pre = "/ar" if b["lang"] == "ar" else ""
+    b["canonical"] = f"{SITE}{pre}/business/{b['slug']}.html"
 
     # LocalBusiness JSON-LD (canonical source)
     m = JSONLD_RE.search(raw)
