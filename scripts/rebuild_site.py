@@ -138,7 +138,7 @@ UI = {
         "filter_all":"All", "filter_open":"Open now", "filter_rated":"Rated 4.5+",
         "guide_eyebrow":"Not sure where to start?",
         "guide_h2_a":"Pick the right vet", "guide_h2_em":"in under a minute.",
-        "guide_p":"Our directory ranks clinics by reviews and distance — not who paid. No sign-up, fully bilingual, free forever.",
+        "guide_p":"Our directory ranks clinics by reviews and distance — not who paid. No sign-up, fully bilingual, free.",
         "guide_cta1":"Browse vets", "guide_cta2":"How we rank",
         "compare_h":"Clinic", "compare_h2":"Rating",
         "foot_dir":"Directory", "foot_journal":"Journal", "foot_business":"Business",
@@ -168,9 +168,8 @@ UI = {
         "blog_soon_h":"Coming soon",
         "blog_soon_p":"We're working on pet care guides, interviews, and newcomer tips tailored to Qatar.",
         "list_h1":"List your business on QatarPaws",
-        "list_lead":"Free listing, bilingual, forever. Built for local businesses that care for Qatar's pets.",
+        "list_lead":"Free listing, bilingual. Built for local businesses that care for Qatar's pets.",
         "list_cta":"Send us your details",
-        "list_mail_subject":"QatarPaws listing request",
         "map_chip_a":"Showing top places", "map_chip_b":"Qatar-wide",
         "popular_tags": ["24-hour vets","Pet-friendly hotels","Mobile grooming","Relocation","Rescue & adoption"],
     },
@@ -199,7 +198,7 @@ UI = {
         "filter_all":"الكل", "filter_open":"مفتوح الآن", "filter_rated":"+4.5",
         "guide_eyebrow":"لست متأكّدًا من أين تبدأ؟",
         "guide_h2_a":"اختر الطبيب البيطري المناسب", "guide_h2_em":"في أقل من دقيقة.",
-        "guide_p":"دليلنا يرتّب العيادات حسب التقييمات والمسافة — لا حسب من دفع. بدون تسجيل، بلغتين، مجاني إلى الأبد.",
+        "guide_p":"دليلنا يرتّب العيادات حسب التقييمات والمسافة — لا حسب من دفع. بدون تسجيل، بلغتين، مجاني.",
         "guide_cta1":"تصفّح العيادات", "guide_cta2":"آلية الترتيب",
         "compare_h":"العيادة", "compare_h2":"التقييم",
         "foot_dir":"الدليل", "foot_journal":"المدونة", "foot_business":"للأعمال",
@@ -229,9 +228,8 @@ UI = {
         "blog_soon_h":"قريبًا",
         "blog_soon_p":"نعمل على أدلّة عناية بالحيوانات، ومقابلات، ونصائح للقادمين الجدد، مصمّمة لقطر.",
         "list_h1":"أضف نشاطك إلى قطر بوز",
-        "list_lead":"إدراج مجاني، ثنائي اللغة، إلى الأبد. مصمّم للأنشطة المحلّية التي تهتمّ بحيوانات قطر.",
+        "list_lead":"إدراج مجاني، ثنائي اللغة. مصمّم للأنشطة المحلّية التي تهتمّ بحيوانات قطر.",
         "list_cta":"أرسل لنا تفاصيلك",
-        "list_mail_subject":"طلب إدراج على قطر بوز",
         "map_chip_a":"أفضل الأماكن", "map_chip_b":"جميع أنحاء قطر",
         "popular_tags": ["طوارئ بيطرية 24/7","فنادق ترحّب بالحيوانات","عناية متنقلة","نقل الحيوانات","مآوٍ وتبنّي"],
     },
@@ -610,7 +608,7 @@ def footer_block(lang: str) -> str:
 <h4>{esc(t['foot_business'])}</h4>
 <ul>
 <li><a href="{pre}/list-your-business.html">{esc(t['foot_list'])}</a></li>
-<li><a href="mailto:hello@qatarpaws.com">{esc(t['foot_contact'])}</a></li>
+<li>qatarpaw@gmail.com</li>
 </ul>
 </div>
 </div>
@@ -1295,7 +1293,7 @@ def build_about(lang: str) -> str:
 <p>Every page is available in English and Arabic. We serve Qatar's diverse community, not a subset of it.</p>
 
 <h2>Photos &amp; takedown policy</h2>
-<p>Photos shown on listings are sourced from publicly available Google Maps pages to help visitors recognize each business. We do not claim ownership of any photo. If you are the owner of a business or photo featured here and want it updated or removed, email us at <a href="mailto:qatarpaw@gmail.com">qatarpaw@gmail.com</a> — we'll respond within 7 days.</p>
+<p>Photos shown on listings are sourced from publicly available Google Maps pages to help visitors recognize each business. We do not claim ownership of any photo. If you are the owner of a business or photo featured here and want it updated or removed, email us at qatarpaw@gmail.com — we'll respond within 7 days.</p>
 """
     else:
         body_prose = """
@@ -1324,7 +1322,7 @@ def build_about(lang: str) -> str:
 <p>كلّ صفحة متوفّرة بالإنجليزية والعربية. نخدم مجتمع قطر المتنوّع بالكامل.</p>
 
 <h2>الصور وسياسة الإزالة</h2>
-<p>الصور المعروضة في القوائم مأخوذة من صفحات خرائط جوجل المتاحة للعموم لمساعدة الزوّار على التعرّف على كلّ نشاط. نحن لا ندّعي ملكية أيّ صورة. إذا كنت صاحب نشاط أو صورة معروضة هنا وتريد تحديثها أو إزالتها، راسلنا على <a href="mailto:qatarpaw@gmail.com">qatarpaw@gmail.com</a> — سنردّ خلال 7 أيام.</p>
+<p>الصور المعروضة في القوائم مأخوذة من صفحات خرائط جوجل المتاحة للعموم لمساعدة الزوّار على التعرّف على كلّ نشاط. نحن لا ندّعي ملكية أيّ صورة. إذا كنت صاحب نشاط أو صورة معروضة هنا وتريد تحديثها أو إزالتها، راسلنا على qatarpaw@gmail.com — سنردّ خلال 7 أيام.</p>
 """
 
     body = f"""<body>
@@ -1392,8 +1390,6 @@ def build_blog(lang: str) -> str:
 def build_list(lang: str) -> str:
     t = UI[lang]
     pre = prefix(lang)
-    subject = quote(t["list_mail_subject"])
-    mail = f"mailto:hello@qatarpaws.com?subject={subject}"
     title = f"{t['list_h1']} | QatarPaws"
     head = head_block(lang=lang, title=title, description=t["list_lead"], path=f"{pre}/list-your-business.html", og_type="website")
 
@@ -1417,7 +1413,7 @@ def build_list(lang: str) -> str:
 </ul>
 
 <h2>Why list with QatarPaws</h2>
-<p>Free forever. Bilingual by default. Verified listings, real Google-synced reviews, mobile-friendly. No paid placement — we rank by genuine reviews, not by who pays. Your customers find you the same way you'd want to find a vet: by looking for the best, not the loudest.</p>
+<p>Bilingual by default. Verified listings, real Google-synced reviews, mobile-friendly. No paid placement — we rank by genuine reviews, not by who pays. Your customers find you the same way you'd want to find a vet: by looking for the best, not the loudest.</p>
 """
     else:
         prose = """
@@ -1439,7 +1435,7 @@ def build_list(lang: str) -> str:
 </ul>
 
 <h2>لماذا قطر بوز</h2>
-<p>مجّاني إلى الأبد. ثنائي اللغة افتراضيًا. إدراج موثَّق، وتقييمات حقيقية مزامَنة مع جوجل، ومُحسَّن للهواتف. لا إدراج مدفوع — نرتّب حسب التقييمات الحقيقية، لا حسب من يدفع. زبائنك يجدونك بنفس الطريقة التي تبحث بها عن طبيب بيطري: بالبحث عن الأفضل، لا عن الأعلى صوتًا.</p>
+<p>ثنائي اللغة افتراضيًا. إدراج موثَّق، وتقييمات حقيقية مزامَنة مع جوجل، ومُحسَّن للهواتف. لا إدراج مدفوع — نرتّب حسب التقييمات الحقيقية، لا حسب من يدفع. زبائنك يجدونك بنفس الطريقة التي تبحث بها عن طبيب بيطري: بالبحث عن الأفضل، لا عن الأعلى صوتًا.</p>
 """
 
     body = f"""<body>
@@ -1449,7 +1445,7 @@ def build_list(lang: str) -> str:
 <div class="wrap">
 <div class="eyebrow">{esc(t['list_lead'])}</div>
 <h1>{esc(t['list_h1'])}</h1>
-<div style="margin-top:22px"><a href="{mail}" class="btn primary">{esc(t['list_cta'])} →</a></div>
+<div style="margin-top:22px;font-size:18px">{esc(t['list_cta'])}: <strong>qatarpaw@gmail.com</strong></div>
 </div>
 </section>
 <div class="wrap">
@@ -1460,7 +1456,7 @@ def build_list(lang: str) -> str:
 </nav>
 <article class="prose">
 {prose}
-<p style="margin-top:28px"><a href="{mail}" class="btn maroon">{esc(t['list_cta'])} →</a></p>
+<p style="margin-top:28px;font-size:18px">{esc(t['list_cta'])}: <strong>qatarpaw@gmail.com</strong></p>
 </article>
 </div>
 </main>
