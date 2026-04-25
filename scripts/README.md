@@ -29,9 +29,3 @@
 2. Run `python scripts/rebuild_site.py`.
 3. Run `python scripts/generate-search-data.py`.
 4. Commit.
-
-## Legacy (`scripts/legacy/`)
-
-One-shot migration scripts from the v1 teal design. They target the old
-markup (`.card`, `.biz-hero`, etc.) and **will corrupt pages if re-run**
-against v2 output. Kept for reference only.
