@@ -9,3 +9,10 @@ __pycache__/
 _tmp_*
 scripts/__pycache__/
 node_modules/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
