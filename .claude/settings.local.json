@@ -70,7 +70,9 @@
       "Bash(grep -oE '\\\\{\"slug\":\"[^\"]+\",\"idx\":[0-9]+,\"token\":\"[^\"]+\",\"url\":\"[^\"]+\"\\\\}' scripts/image_rescue.js)",
       "Bash(python3)",
       "Bash(grep -E \"\\\\.html$\")",
-      "Bash(git log *)"
+      "Bash(git log *)",
+      "Bash(git rm *)",
+      "Bash(rm -f \"C:/ClaudeWorkspace/projects/Directories/Pets/Directory Website - Pets/qatarpaws-site/qatarpaws/qatarpaws/scripts/qatarpaws-image-rescue-TEST.user.js\")"
     ],
     "deny": [],
     "ask": []

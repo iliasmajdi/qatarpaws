@@ -1,6 +1,7 @@
 *.bak
 *.tmp
 *.swp
+*.har
 .DS_Store
 Thumbs.db
 __pycache__/

@@ -1,0 +1,1988 @@
+// ==UserScript==
+// @name         QatarPaws image rescue (production)
+// @namespace    https://qatarpaws.com/
+// @version      1.1.0
+// @description  Walks every business's Maps page, downloads cover photo, writes manifest.
+// @match        https://www.google.com/maps/*
+// @grant        GM_xmlhttpRequest
+// @grant        GM_download
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_deleteValue
+// @run-at       document-idle
+// @connect      lh3.googleusercontent.com
+// @connect      lh4.googleusercontent.com
+// @connect      lh5.googleusercontent.com
+// @connect      googleusercontent.com
+// ==/UserScript==
+
+(function () {
+  'use strict';
+
+  // ---- baked-in business list ------------------------------------------ //
+  const BUSINESSES = [
+  {
+    "slug": "abesq-doha-hotel-residences",
+    "name": "Abesq Doha Hotel & Residences",
+    "lat": 25.2745896,
+    "lng": 51.5104517,
+    "mapsUrl": "https://www.google.com/maps/place/Abesq+Doha+Hotel+%26+Residences/@25.2837659,51.2491676,66207m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45db7a4fc35183:0xfe1bdc9f641b79bb!5m2!4m1!1i2!8m2!3d25.2745896!4d51.5104517!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11srmlb19q?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "abraj-inn-royal-hotel",
+    "name": "Abraj INN Royal Hotel",
+    "lat": 25.2464145,
+    "lng": 51.5517421,
+    "mapsUrl": "https://www.google.com/maps/place/Abraj+INN+Royal+Hotel/@25.2875899,51.2583547,66205m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45cf006448e225:0xf0aacb6d5fea076e!5m2!4m1!1i2!8m2!3d25.2464145!4d51.5517421!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11x164r4r7?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "abraj-inn-suites-hotel",
+    "name": "Abraj INN Suites hotel",
+    "lat": 25.2673102,
+    "lng": 51.528265,
+    "mapsUrl": "https://www.google.com/maps/place/Abraj+INN+Suites+hotel/@25.3288762,51.2480482,66182m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c59955481af7:0x2f603e0405df5a14!5m2!4m1!1i2!8m2!3d25.2673102!4d51.528265!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11x32x6_w7?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "advanced-veterinary-madinat-khalifa",
+    "name": "Advanced Veterinary Madinat Khalifa",
+    "lat": 25.3100143,
+    "lng": 51.4726169,
+    "mapsUrl": "https://www.google.com/maps/place/Advanced+Veterinary+Madinat+Khalifa/@25.3100143,51.2684534,46860m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45db7231ab0689:0xa8afeea4408a1efb!8m2!3d25.3100143!4d51.4726169!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBD2FuaW1hbF9ob3NwaXRhbJoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VNeWJFeHBibXQzUlJBQuABAPoBBAgAEEw!16s%2Fg%2F11f7tlrpt4?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "advanced-veterinary-west-bay",
+    "name": "Advanced Veterinary West Bay",
+    "lat": 25.3599013,
+    "lng": 51.5198688,
+    "mapsUrl": "https://www.google.com/maps/place/Advanced+Veterinary+West+Bay/@25.3599013,51.3157053,46841m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45c369ae06be61:0x396c6c552295c51f!8m2!3d25.3599013!4d51.5198688!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBD2FuaW1hbF9ob3NwaXRhbJoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQydGtlR0pWUm10Tk0xcExUV3hvU1ZaVVduTlNSWEJwWlZWc01tSnNSUkFC4AEA-gEFCMwBEEU!16s%2Fg%2F11t81cys39?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "al-cockatoo-birds-animals-ornamental-fish",
+    "name": "Al Cockatoo Birds, Animals, Ornamental Fish",
+    "lat": 25.3353239,
+    "lng": 51.4637105,
+    "mapsUrl": "https://www.google.com/maps/place/Al+Cockatoo+Birds,+Animals,+Ornamental+Fish/@25.2438241,51.0491323,93701m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45dd7301f33fc9:0x61edad056379285!8m2!3d25.3353239!4d51.4637105!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgEkQ2hkRFNVaE5NRzluUzBWSlEwRm5TVU5RY0dKdWRpMUJSUkFC4AEA-gEECAAQQg!16s%2Fg%2F11gnrw2xp8?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "al-fiafy-vet-store",
+    "name": "Al fiafy vet store",
+    "lat": 25.4103258,
+    "lng": 51.408087,
+    "mapsUrl": "https://www.google.com/maps/place/Al+fiafy+vet+store/@25.4103258,51.2039235,46821m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45e1c3f1a1dae7:0xfbb34d6eac5d509f!8m2!3d25.4103258!4d51.408087!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBFG1lZGljYWxfc3VwcGx5X3N0b3Jl4AEA!16s%2Fg%2F11l77j3fmb?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "al-galayel-equine-center-l-مركز-القلايل-للخيل",
+    "name": "Al Galayel Equine Center l مركز القلايل للخيل",
+    "lat": 25.2643336,
+    "lng": 51.4302676,
+    "mapsUrl": "https://www.google.com/maps/place/Al+Galayel+Equine+Center+l+%D9%85%D8%B1%D9%83%D8%B2+%D8%A7%D9%84%D9%82%D9%84%D8%A7%D9%8A%D9%84+%D9%84%D9%84%D8%AE%D9%8A%D9%84%E2%80%AD/@25.2643336,51.2261041,46878m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45d91fb93b4ec1:0xba7dace82b650b7d!8m2!3d25.2643336!4d51.4302676!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBE3ZldGVyaW5hcnlfcGhhcm1hY3maASNDaFpEU1VoTk1HOW5TMFZKUTBGblNVUjRMVGRIY1V0M0VBReABAPoBBAgAEDA!16s%2Fg%2F11g2w3l_z4?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "al-ibrga-pet-store",
+    "name": "Al Ibrga Pet Store",
+    "lat": 25.1689375,
+    "lng": 51.6083125,
+    "mapsUrl": "https://www.google.com/maps/place/Al+Ibrga+Pet+Store/@25.1689375,51.2002955,93758m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45cb82e7a3135f:0xdeb482d63917b5b9!8m2!3d25.1689375!4d51.6083125!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDJ0d1JVNVZjRWhSVkZJeFVrZEthVTR4U1hkUFZ6RndZVVU1TUZWRlJSQULgAQD6AQQIABBC!16s%2Fg%2F11c60jpz5x?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "al-jarrah-vet-clinic",
+    "name": "Al jarrah vet. Clinic",
+    "lat": 25.1034753,
+    "lng": 51.5753002,
+    "mapsUrl": "https://www.google.com/maps/place/Al+jarrah+vet.+Clinic/@25.1034753,51.3711367,46940m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e4433afe08c43a7:0x937ea3b541bb2d77!8m2!3d25.1034753!4d51.5753002!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VOQ2IwOTFNazVCRUFF4AEA-gEECAAQNQ!16s%2Fg%2F11jsf8lshr?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "al-jazeera-veterinary-services-and-laboratory",
+    "name": "AL-JAZEERA VETERINARY SERVICES AND LABORATORY",
+    "lat": 25.3941813,
+    "lng": 51.2251411,
+    "mapsUrl": "https://www.google.com/maps/place/AL-JAZEERA+VETERINARY+SERVICES+AND+LABORATORY/@25.3941813,51.0209776,46828m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e460d2d8661eb77:0x9673ecb34c76f05f!8m2!3d25.3941813!4d51.2251411!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBE3ZldGVyaW5hcnlfcGhhcm1hY3maASNDaFpEU1VoTk1HOW5TMFZKUTBGblNVUmZYMDVxWDFKQkVBReABAPoBBAgAEBI!16s%2Fg%2F11fnbdtm2q?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "al-kanari-for-birds-fish-aquarium",
+    "name": "Al-Kanari for Birds & Fish Aquarium",
+    "lat": 25.318191,
+    "lng": 51.4830563,
+    "mapsUrl": "https://www.google.com/maps/place/Al-Kanari+for+Birds+%26+Fish+Aquarium/@25.2438241,51.0491323,93701m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45db700521c8ef:0xc640f273b6cf70be!8m2!3d25.318191!4d51.4830563!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgEkQ2hkRFNVaE5NRzluUzBWSlEwRm5TVU53YUhSUVZpMW5SUkFC4AEA-gEECAAQQQ!16s%2Fg%2F11cn8tcqn5?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "al-maha-veterinary-hospital",
+    "name": "Al Maha Veterinary Hospital",
+    "lat": 25.3719053,
+    "lng": 51.4406186,
+    "mapsUrl": "https://www.google.com/maps/place/Al+Maha+Veterinary+Hospital/@25.3719053,51.2364551,46836m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45ddf7ae8430bf:0xe822eceef94e147d!8m2!3d25.3719053!4d51.4406186!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VSU2NXUkVNemxSUlJBQuABAPoBBAg5EDU!16s%2Fg%2F11rsc1nb4l?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "al-mansour-suites-hotel",
+    "name": "Al Mansour Suites Hotel",
+    "lat": 25.2666776,
+    "lng": 51.5264847,
+    "mapsUrl": "https://www.google.com/maps/place/Al+Mansour+Suites+Hotel/@25.2743304,51.2634848,66212m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c55a01d62ead:0x3a982f8d5a4473e4!5m2!4m1!1i2!8m2!3d25.2666776!4d51.5264847!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11c7sx1f17?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "al-mazayen-vet-pharmacy-wakra",
+    "name": "AL MAZAYEN VET PHARMACY-WAKRA",
+    "lat": 25.1034922,
+    "lng": 51.5753787,
+    "mapsUrl": "https://www.google.com/maps/place/AL+MAZAYEN+VET+PHARMACY-WAKRA/@25.1034922,51.3712152,46940m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e44330f0ffe73ad:0xc78d9a7734d5024f!8m2!3d25.1034922!4d51.5753787!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBE3ZldGVyaW5hcnlfcGhhcm1hY3maASNDaFpEU1VoTk1HOW5TMFZKUTBGblNVTkNiMDUxYjJOUkVBReABAPoBBAgAEDM!16s%2Fg%2F11rq8nyrgn?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "al-rayyan-veterinary-center-مركز-الريان-البيطري",
+    "name": "Al-Rayyan Veterinary Center مركز الريان البيطري",
+    "lat": 25.2683464,
+    "lng": 51.4246956,
+    "mapsUrl": "https://www.google.com/maps/place/Al-Rayyan+Veterinary+Center+%D9%85%D8%B1%D9%83%D8%B2+%D8%A7%D9%84%D8%B1%D9%8A%D8%A7%D9%86+%D8%A7%D9%84%D8%A8%D9%8A%D8%B7%D8%B1%D9%8A%E2%80%AD/@25.2683464,51.2205321,46876m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45d9f5a5a09d17:0xbde26faf4c178557!8m2!3d25.2683464!4d51.4246956!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQydHNjRmRJV2tkVlJFSndWREJTZVZadWNFdFNiVkpVWWtkV1IxVnVZeEFC4AEA-gEECAAQOQ!16s%2Fg%2F11j3js_x3p?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "al-tamimi-vet-clinic",
+    "name": "Al-Tamimi Vet Clinic",
+    "lat": 25.3621421,
+    "lng": 51.5269679,
+    "mapsUrl": "https://www.google.com/maps/place/Al-Tamimi+Vet+Clinic/@25.3621421,51.3228044,46840m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45c3478afd0c81:0x7ad6e292fefb0ec!8m2!3d25.3621421!4d51.5269679!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VOMU9HOTViMEpSRUFF4AEA-gEECEgQPA!16s%2Fg%2F11bbwqt9lh?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "al-wakra-vetrinary-center",
+    "name": "Al Wakra Vetrinary Center",
+    "lat": 25.2611074,
+    "lng": 51.4549219,
+    "mapsUrl": "https://www.google.com/maps/place/Al+Wakra+Vetrinary+Center/@25.2611074,51.2507584,46879m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45da41c958f095:0x91d45b3dad19cd54!8m2!3d25.2611074!4d51.4549219!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbuABAA!16s%2Fg%2F11c307zgw8?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "alaseel-veterinary-clinic",
+    "name": "Alaseel Veterinary Clinic",
+    "lat": 25.4794582,
+    "lng": 51.4088164,
+    "mapsUrl": "https://www.google.com/maps/place/Alaseel+Veterinary+Clinic/@25.4794582,51.2046529,46795m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45e32e97b032d9:0xb40c3e876227f454!8m2!3d25.4794582!4d51.4088164!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyc3hibGt3Y0RGVVZFazFWVlJHTW1OWVVrcFdia1V3WVc1Sk0xcEZSUkFC4AEA-gEECGAQRQ!16s%2Fg%2F11h5rwmhl7?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "aleef-veterinary-center",
+    "name": "Aleef Veterinary Center",
+    "lat": 25.409204,
+    "lng": 51.5050617,
+    "mapsUrl": "https://www.google.com/maps/place/Aleef+Veterinary+Center/@25.4206771,51.2985098,46817m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45dd1859194129:0x630cf972e9492498!8m2!3d25.409204!4d51.5050617!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyMVNibVJWYUdoaGJrSldXSHBPZWs5SVNuTmtiVXB5VXpOV1MxWnNSUkFC4AEA-gEECDEQPg!16s%2Fg%2F11twlwjm_l?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "aleph-doha-residences-curio-collection-by-hilton",
+    "name": "Aleph Doha Residences, Curio Collection by Hilton",
+    "lat": 25.3270977,
+    "lng": 51.5351903,
+    "mapsUrl": "https://www.google.com/maps/place/Aleph+Doha+Residences,+Curio+Collection+by+Hilton/@25.2704895,51.2503159,66214m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c4bfcc4ec123:0x123af18d36856528!5m2!4m1!1i2!8m2!3d25.3270977!4d51.5351903!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11c5hjlj2q?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "alhalal-veterinary-clinic",
+    "name": "AlHalal Veterinary Clinic",
+    "lat": 25.6721822,
+    "lng": 51.5069384,
+    "mapsUrl": "https://www.google.com/maps/place/AlHalal+Veterinary+Clinic/@25.6721822,51.3027749,46719m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45f914eaf20fe7:0x391eaf16e5c30302!8m2!3d25.6721822!4d51.5069384!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VSaWJVNVlSV2gzUlJBQuABAPoBBQiuARBK!16s%2Fg%2F11q1q3cgtk?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "alkhor-veterinary-center",
+    "name": "Alkhor veterinary center",
+    "lat": 25.6706212,
+    "lng": 51.4898196,
+    "mapsUrl": "https://www.google.com/maps/place/Alkhor+veterinary+center/@25.6706212,51.2856561,46720m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45f96cf88bf1c3:0xee883a02f4b0a0ee!8m2!3d25.6706212!4d51.4898196!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBD2FuaW1hbF9ob3NwaXRhbJoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyeGtZVm95YUROVldGWXdWR3Q0TTFKRlZYUmFhMHBSVTJ4c1dHVllZeEFC4AEA-gEECAAQJw!16s%2Fg%2F11n0mpd5vs?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "alzagel-center",
+    "name": "Alzagel Center",
+    "lat": 25.2428907,
+    "lng": 51.4760956,
+    "mapsUrl": "https://www.google.com/maps/place/Alzagel+Center/@25.2907094,51.3004563,46868m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45d07ef2d5c4d3:0xf1a5a18fcb53763a!8m2!3d25.2428907!4d51.4760956!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbuABAA!16s%2Fg%2F11c6bw7tdw?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "amazon-qatar",
+    "name": "Amazon Qatar",
+    "lat": 25.2438241,
+    "lng": 51.4571493,
+    "mapsUrl": "https://www.google.com/maps/place/Amazon+Qatar/@25.372226,51.1464952,93601m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45da7429a756a5:0xa32b4a12a611c996!8m2!3d25.2438241!4d51.4571493!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDJ0NFVGUkRNVFJoVmsxNlpESjRlR0p1VmpGbGJteDNWMWRPYkU1R1JSQULgAQD6AQQIABA-!16s%2Fg%2F11bzv2nrqd?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "amora-pizza-in-the-park",
+    "name": "Amora Pizza in the Park",
+    "lat": 25.2933046,
+    "lng": 51.5192924,
+    "mapsUrl": "https://www.google.com/maps/place/Amora+Pizza+in+the+Park/@25.3763274,51.1358365,93531m/data=!3m1!1e3!4m10!1m2!2m1!1spet+friendly+cafe+doha!3m6!1s0x3e45c5aa55907865:0x6f1c58133ca035ae!8m2!3d25.2933046!4d51.5192924!15sChZwZXQgZnJpZW5kbHkgY2FmZSBkb2hhWhgiFnBldCBmcmllbmRseSBjYWZlIGRvaGGSAQhkb2dfY2FmZZoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VSbGFIVm1aVmQzRUFF4AEA-gEECGUQOQ!16s%2Fg%2F11ptly4ryt?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "andaz-doha-by-hyatt",
+    "name": "Andaz Doha, by Hyatt",
+    "lat": 25.3245375,
+    "lng": 51.5371879,
+    "mapsUrl": "https://www.google.com/maps/place/Andaz+Doha,+by+Hyatt/@25.2727849,51.2248382,66213m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c5dcab193e1b:0x2334d98349913337!5m2!4m1!1i2!8m2!3d25.3245375!4d51.5371879!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11t7d0_b2y?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "animal-health-affairs",
+    "name": "Animal Health Affairs",
+    "lat": 25.2462291,
+    "lng": 51.5670999,
+    "mapsUrl": "https://www.google.com/maps/place/Animal+Health+Affairs/@25.2462291,51.3629364,46885m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45cf0fda86e359:0xa8519697504c0f39!8m2!3d25.2462291!4d51.5670999!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBCmdvdmVybm1lbnTgAQA!16s%2Fg%2F1tgz3yyx?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "animal-kingdom",
+    "name": "Animal Kingdom",
+    "lat": 25.2737129,
+    "lng": 51.5238968,
+    "mapsUrl": "https://www.google.com/maps/place/Animal+Kingdom/@25.3763274,51.135545,93598m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45c55a7b4157b7:0x51e54fe179e75d55!8m2!3d25.2737129!4d51.5238968!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEIcGV0X2NhcmWaAURDaTlEUVVsUlFVTnZaRU5vZEhsalJqbHZUMnBhU2xwck9VZFVWVkpYV1c1YVVXUkhXblppVXpBd1pWWk9UVTlYWXhBQuABAPoBBAhsEEM!16s%2Fg%2F11b6yn4bwj?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "animal-yard-pharmacy",
+    "name": "Animal Yard Pharmacy",
+    "lat": 25.6662552,
+    "lng": 51.4887419,
+    "mapsUrl": "https://www.google.com/maps/place/Animal+Yard+Pharmacy/@25.6662552,51.2845784,46722m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45f9f4c662aedb:0xc08c63f2ec6bf1d5!8m2!3d25.6662552!4d51.4887419!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBE3ZldGVyaW5hcnlfcGhhcm1hY3maASNDaFpEU1VoTk1HOW5TMFZKUTBGblNVUXlhVTFNTjJGbkVBReABAPoBBQiiARBL!16s%2Fg%2F11rfl_4fw5?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "animals-house",
+    "name": "Animals house",
+    "lat": 25.3208201,
+    "lng": 51.4860727,
+    "mapsUrl": "https://www.google.com/maps/place/Animals+house/@25.2912586,51.1037354,93720m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45db8f26f1bfc9:0x63c8be66d3f35b88!8m2!3d25.3208201!4d51.4860727!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSARBwZXRfc3VwcGx5X3N0b3JlmgEkQ2hkRFNVaE5NRzluUzBWSlEwRm5TVVJDYW5SdVgyZDNSUkFC4AEA-gEECAAQJA!16s%2Fg%2F11smgq78rg?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "areen-pets",
+    "name": "Areen Pets",
+    "lat": 25.1696711,
+    "lng": 51.6093756,
+    "mapsUrl": "https://www.google.com/maps/place/Areen+Pets/@25.1696711,51.3209845,66269m/data=!3m1!1e3!4m10!1m2!2m1!1sdog+training+qatar!3m6!1s0x3e45cbb69f8f629f:0x1bcc38002aa7273b!8m2!3d25.1696711!4d51.6093756!15sChJkb2cgdHJhaW5pbmcgcWF0YXJaFCISZG9nIHRyYWluaW5nIHFhdGFykgETZG9nX2RheV9jYXJlX2NlbnRlcpoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VSeWJtUk1UVGxCUlJBQuABAPoBBQjHARAu!16s%2Fg%2F11q3z8lz4v?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "artist-cafe-the-pearl-qatar-qanat-quartier",
+    "name": "Artist cafe - the Pearl Qatar - Qanat quartier",
+    "lat": 25.3767046,
+    "lng": 51.5454078,
+    "mapsUrl": "https://www.google.com/maps/place/Artist+cafe+-+the+Pearl+Qatar+-+Qanat+quartier/@25.3763274,51.1358365,93531m/data=!3m1!1e3!4m10!1m2!2m1!1spet+friendly+cafe+doha!3m6!1s0x3e45c3d489c32e11:0xea922adb14ca43f9!8m2!3d25.3767046!4d51.5454078!15sChZwZXQgZnJpZW5kbHkgY2FmZSBkb2hhWhgiFnBldCBmcmllbmRseSBjYWZlIGRvaGGSAQpyZXN0YXVyYW50mgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDIxR1QxWldSVEphYlhSTlducHJkMkpIV2t4U01XTTBUbXhvZWsxdVl4QULgAQD6AQQIFxA_!16s%2Fg%2F11l29zxy7q?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "banana-island-resort-doha-by-anantara",
+    "name": "Banana Island Resort Doha by Anantara",
+    "lat": 25.298019,
+    "lng": 51.6406456,
+    "mapsUrl": "https://www.google.com/maps/place/Banana+Island+Resort+Doha+by+Anantara/@25.298019,51.3522545,66199m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c7d546c7e139:0x43c7bd25c703f4fb!5m2!4m1!1i2!8m2!3d25.298019!4d51.6406456!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBDHJlc29ydF9ob3RlbKoBYgoIL20vMDY4aHkQASoWIhJwZXQgZnJpZW5kbHkgaG90ZWwoADIfEAEiG7PS1aJq6pJLnviyVK2rzB-TVJcN4oR3qsm4nDIbEAIiF3BldCBmcmllbmRseSBob3RlbCBkb2hh4AEA!16s%2Fg%2F11cnxzb8wf?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "barkers-mittens-pet-boutique",
+    "name": "Barkers & Mittens Pet Boutique",
+    "lat": 25.2903017,
+    "lng": 51.5206681,
+    "mapsUrl": "https://www.google.com/maps/place/Barkers+%26+Mittens+Pet+Boutique/@25.4143717,51.0961145,93625m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45c32c35480799:0x133e97c6fef85e33!8m2!3d25.2903017!4d51.5206681!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VOQ01qUjZYMHhuRUFF4AEA-gEECAAQSg!16s%2Fg%2F11g22z7wwh?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "best-plaza-west-bay-hotel",
+    "name": "Best Plaza West Bay Hotel",
+    "lat": 25.3280251,
+    "lng": 51.5330558,
+    "mapsUrl": "https://www.google.com/maps/place/Best+Plaza+West+Bay+Hotel/@25.2673102,51.2398739,66216m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c4be8ef13db3:0xc89a86ef685cd5cc!5m2!4m1!1i2!8m2!3d25.3280251!4d51.5330558!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11bytn3mcw?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "biovet-for-veterinary-trading-صيدلية-بيوفت-البيطرية-الفروسية",
+    "name": "Biovet For Veterinary Trading صيدلية بيوفت البيطرية الفروسية",
+    "lat": 25.2647242,
+    "lng": 51.4301941,
+    "mapsUrl": "https://www.google.com/maps/place/Biovet+For+Veterinary+Trading+%D8%B5%D9%8A%D8%AF%D9%84%D9%8A%D8%A9+%D8%A8%D9%8A%D9%88%D9%81%D8%AA+%D8%A7%D9%84%D8%A8%D9%8A%D8%B7%D8%B1%D9%8A%D8%A9+%D8%A7%D9%84%D9%81%D8%B1%D9%88%D8%B3%D9%8A%D8%A9%E2%80%AD/@25.2611074,51.2507584,46879m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45d91da8b7236f:0x86f1ac9e01a543bf!8m2!3d25.2647242!4d51.4301941!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBE3ZldGVyaW5hcnlfcGhhcm1hY3maASNDaFpEU1VoTk1HOW5TMFZKUTBGblNVUlljRXgyUkVSUkVBReABAPoBBAgAEC8!16s%2Fg%2F11q3vjdrt1?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "bird-souq",
+    "name": "Bird Souq",
+    "lat": 25.2888471,
+    "lng": 51.5328738,
+    "mapsUrl": "https://www.google.com/maps/place/Bird+Souq/@25.2592112,51.0448278,93689m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45c53c2830671b:0x9008e922099239de!8m2!3d25.2888471!4d51.5328738!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgEjQ2haRFNVaE5NRzluUzBWSlEwRm5UVU5CTlV0aGNtWkJFQUXgAQD6AQQIABBF!16s%2Fg%2F11g8cxm3df?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "café-999",
+    "name": "Café #999",
+    "lat": 25.3031909,
+    "lng": 51.5079063,
+    "mapsUrl": "https://www.google.com/maps/place/Caf%C3%A9+%23999/@25.3763274,51.1358365,93531m/data=!3m1!1e3!4m10!1m2!2m1!1spet+friendly+cafe+doha!3m6!1s0x3e45db2ee689f0e9:0x8fe5429f44d30755!8m2!3d25.3031909!4d51.5079063!15sChZwZXQgZnJpZW5kbHkgY2FmZSBkb2hhWhgiFnBldCBmcmllbmRseSBjYWZlIGRvaGGSAQpyZXN0YXVyYW50mgEjQ2haRFNVaE5NRzluUzBWSlEwRm5UVVJKYm1SMWNVZEJFQUXgAQD6AQQIABBF!16s%2Fg%2F11cn0mh2zb?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "café-pouchkine-qatar",
+    "name": "Café Pouchkine Qatar",
+    "lat": 25.3614783,
+    "lng": 51.5234011,
+    "mapsUrl": "https://www.google.com/maps/place/Caf%C3%A9+Pouchkine+Qatar/@25.3763274,51.1358365,93531m/data=!3m1!1e3!4m10!1m2!2m1!1spet+friendly+cafe+doha!3m6!1s0x3e45c3b0cc1d7117:0x504b29dd62a68148!8m2!3d25.3614783!4d51.5234011!15sChZwZXQgZnJpZW5kbHkgY2FmZSBkb2hhWhgiFnBldCBmcmllbmRseSBjYWZlIGRvaGGSAQRjYWZlmgEjQ2haRFNVaE5NRzluUzBWSlEwRm5TVU5mZDJWNVIxRlJFQUXgAQD6AQQIABAb!16s%2Fg%2F11fm6kgtcj?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "canadian-veterinary-hospital",
+    "name": "Canadian Veterinary Hospital",
+    "lat": 25.3565765,
+    "lng": 51.4787618,
+    "mapsUrl": "https://www.google.com/maps/place/Canadian+Veterinary+Hospital/@25.3565765,51.2745983,46842m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45dcf0b0823957:0x53a19009f055e117!8m2!3d25.3565765!4d51.4787618!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyMUtWMVJFVG1oaU0zQkZaVzFTVTA5R1VuVk9SM1F5VDBkU2QyUlhZeEFC4AEA-gEFCIIBEEc!16s%2Fg%2F11bbrn4lgw?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "cat-planet-2",
+    "name": "Cat Planet",
+    "lat": 25.2236133,
+    "lng": 51.5063568,
+    "mapsUrl": "https://www.google.com/maps/place/Cat+Planet/@25.3149759,51.0723786,93646m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45d175b33f2691:0x3cefd23f0f30d852!8m2!3d25.2236133!4d51.5063568!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDJ0dmRGSnJjRzVWUkdSM1ZrWndXRTFGYkhKVGJWVjVVa2h3UWxwWVl4QULgAQD6AQQIABAP!16s%2Fg%2F11xmlss2fw?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "cat-planet",
+    "name": "Cat planet",
+    "lat": 25.3208113,
+    "lng": 51.4860767,
+    "mapsUrl": "https://www.google.com/maps/place/Cat+planet/@25.2912586,51.1037354,93720m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45db709c1b3517:0x2584fd3a994193be!8m2!3d25.3208113!4d51.4860767!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQlwZXRfc3RvcmWaAURDaTlEUVVsUlFVTnZaRU5vZEhsalJqbHZUMnQ0Ym1KNlpFdGllbWN6VDFoYU1WUlZlRU5ZTVZKeFZUQTRkMDFHUlJBQuABAPoBBAgAEEA!16s%2Fg%2F11q3d9glf6?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "century-marina-hotel-lusail",
+    "name": "Century Marina Hotel, Lusail",
+    "lat": 25.39849,
+    "lng": 51.519806,
+    "mapsUrl": "https://www.google.com/maps/place/Century+Marina+Hotel,+Lusail/@25.2891127,51.2577165,66204m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c37e44ee5469:0x560b7d8ef9326b65!5m2!4m1!1i2!8m2!3d25.39849!4d51.519806!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11nmzyb_nd?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "chairmen-hotel-doha",
+    "name": "Chairmen Hotel Doha",
+    "lat": 25.2686312,
+    "lng": 51.5376724,
+    "mapsUrl": "https://www.google.com/maps/place/Chairmen+Hotel+Doha/@25.2666776,51.2380936,66216m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c56023a3dbc3:0x80be66bd9c79af09!5m2!4m1!1i2!8m2!3d25.2686312!4d51.5376724!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F1vyn2bg2?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "creature-world",
+    "name": "Creature World",
+    "lat": 25.6836239,
+    "lng": 51.4952311,
+    "mapsUrl": "https://www.google.com/maps/place/Creature+World/@25.6836239,51.0872141,93359m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45f9c815984509:0xc7fd0829b2846159!8m2!3d25.6836239!4d51.4952311!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgEkQ2hkRFNVaE5NRzluUzBWSlEwRm5TVU5XTkdWeGNYZEJSUkFC4AEA-gEECAAQIg!16s%2Fg%2F11hbvtd1t5?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "creatures-kingdom",
+    "name": "CREATURES KINGDOM",
+    "lat": 25.3939375,
+    "lng": 51.4280625,
+    "mapsUrl": "https://www.google.com/maps/place/CREATURES+KINGDOM/@25.2415616,51.0413941,93758m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45e15c235ac02b:0xdeacbc29f5b2a242!8m2!3d25.3939375!4d51.4280625!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQlwZXRfc3RvcmWaAURDaTlEUVVsUlFVTnZaRU5vZEhsalJqbHZUMjVHZWxaV1RuQlZSVWwzVWtkMFNXTlZhelJTUkdSVVUwUnNiRTFHUlJBQuABAPoBBAgAECs!16s%2Fg%2F11h5qpq40x?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "creatures-oasis",
+    "name": "Creatures Oasis",
+    "lat": 25.273631,
+    "lng": 51.5238237,
+    "mapsUrl": "https://www.google.com/maps/place/Creatures+Oasis/@25.2887697,51.3268137,46869m/data=!3m1!1e3!4m11!1m2!2m1!1sveterinary+clinic+qatar!3m7!1s0x3e45c54f091efc7d:0xe42247ecf5052f18!8m2!3d25.273631!4d51.5238237!10e2!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VOekxYWklhMVZCRUFF4AEA-gEECAAQLw!16s%2Fg%2F11c1p5wr25?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "crowne-plaza-doha-the-business-park",
+    "name": "Crowne Plaza Doha - The Business Park",
+    "lat": 25.27337,
+    "lng": 51.541109,
+    "mapsUrl": "https://www.google.com/maps/place/Crowne+Plaza+Doha+-+The+Business+Park/@25.3270977,51.2467992,66183m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c5669d858761:0xc4960b163bc0ff16!5m2!4m1!1i2!8m2!3d25.27337!4d51.541109!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11b6glv4jt?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "cure-veterinary-pharmacy",
+    "name": "Cure Veterinary Pharmacy",
+    "lat": 25.1621648,
+    "lng": 51.5147615,
+    "mapsUrl": "https://www.google.com/maps/place/Cure+Veterinary+Pharmacy/@25.1621648,51.310598,46917m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45d3d73bcd4ad1:0x7d24f4cbef1cae78!8m2!3d25.1621648!4d51.5147615!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBE3ZldGVyaW5hcnlfcGhhcm1hY3maASRDaGREU1VoTk1HOW5TMFZKUTBGblNVUlVkMHRpWjI1blJSQULgAQD6AQQIABBE!16s%2Fg%2F11s7_4t5t8?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "cyno-dynamics-animal-care",
+    "name": "Cyno Dynamics Animal care",
+    "lat": 25.3149759,
+    "lng": 51.4803956,
+    "mapsUrl": "https://www.google.com/maps/place/Cyno+Dynamics+Animal+care/@25.4143717,51.0961145,93625m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45db793eb78709:0x84461e0b35b4e17d!8m2!3d25.3149759!4d51.4803956!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBJENoZERTVWhOTUc5blMwVkpRMEZuVFVOSk1YRlVTWEpCUlJBQuABAPoBBAhXEEk!16s%2Fg%2F11x2f0yx_c?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "dana-hotel",
+    "name": "Dana Hotel",
+    "lat": 25.287174,
+    "lng": 51.543755,
+    "mapsUrl": "https://www.google.com/maps/place/Dana+Hotel/@25.3286512,51.2427986,66182m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c56cd5ea45f3:0xb5e752b0953bdabb!5m2!4m1!1i2!8m2!3d25.287174!4d51.543755!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F1tflqh33?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "dar-animal-pet-shop",
+    "name": "Dar animal pet shop",
+    "lat": 25.2444121,
+    "lng": 51.4543836,
+    "mapsUrl": "https://www.google.com/maps/place/Dar+animal+pet+shop/@25.2592112,51.0448278,93689m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45dbc35721084b:0xe4f749880c869616!8m2!3d25.2444121!4d51.4543836!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgEkQ2hkRFNVaE5NRzluUzBWSlEwRm5TVVJJYzNGMlpqZFJSUkFC4AEA-gEFCMcDEC4!16s%2Fg%2F11s1969vwy?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "delmoosh-pet-center",
+    "name": "Delmoosh Pet Center",
+    "lat": 25.4143717,
+    "lng": 51.5043757,
+    "mapsUrl": "https://www.google.com/maps/place/Delmoosh+Pet+Center/@25.4143717,51.0961145,93625m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45dd7c13094e8f:0x6f010e3a3fbaaf64!8m2!3d25.4143717!4d51.5043757!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQlwZXRfc3RvcmWaAURDaTlEUVVsUlFVTnZaRU5vZEhsalJqbHZUMnBOTUZWWWJIWlNWazAwWW14b1VXUnVSVEpOVlVvMlRrUktjbVJYWXhBQuABAPoBBQjDARBF!16s%2Fg%2F11l71bxhyp?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "delta-hotels-city-center-doha",
+    "name": "Delta Hotels City Center Doha",
+    "lat": 25.3288762,
+    "lng": 51.5364393,
+    "mapsUrl": "https://www.google.com/maps/place/Delta+Hotels+City+Center+Doha/@25.3245,51.2507013,66185m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c5c94d4ca57b:0xe607211b87963158!5m2!4m1!1i2!8m2!3d25.3288762!4d51.5364393!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11lgk5_tg3?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "dogcatto-pet-store",
+    "name": "Dogcatto Pet Store",
+    "lat": 25.2592112,
+    "lng": 51.4528448,
+    "mapsUrl": "https://www.google.com/maps/place/Dogcatto+Pet+Store/@25.2592112,51.0448278,93689m/data=!3m1!1e3!4m12!1m3!2m2!1spet+shops!6e6!3m7!1s0x3e45cf4bfca34837:0xc5f6a866fcf3fa1d!8m2!3d25.2592112!4d51.4528448!10e2!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDJwb1ExRXlhRzVXYlZweVpVVXhTbEpWYkUxaGJYaGFVV3RrZUZSVlJSQULgAQD6AQQIQxAt!16s%2Fg%2F11snwz57_h?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "doha-dynasty-hotel",
+    "name": "DOHA DYNASTY HOTEL",
+    "lat": 25.2837659,
+    "lng": 51.5375587,
+    "mapsUrl": "https://www.google.com/maps/place/DOHA+DYNASTY+HOTEL/@25.2277824,51.2502723,66237m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c56a8ee5ff05:0x6e994953c33cb10a!5m2!4m1!1i2!8m2!3d25.2837659!4d51.5375587!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11bwnd267z?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "doha-veterinary-services",
+    "name": "DOHA VETERINARY SERVICES",
+    "lat": 25.3945183,
+    "lng": 51.2238487,
+    "mapsUrl": "https://www.google.com/maps/place/DOHA+VETERINARY+SERVICES/@25.3945183,51.0196852,46828m/data=!3m1!1e3!4m11!1m2!2m1!1sveterinary+clinic+qatar!3m7!1s0x3e460c337505635b:0x99b139f5f7178155!8m2!3d25.3945183!4d51.2238487!10e2!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBE3ZldGVyaW5hcnlfcGhhcm1hY3ngAQA!16s%2Fg%2F11cn5rhvmy?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "dragon-animal-care-center",
+    "name": "Dragon Animal Care Center",
+    "lat": 25.3413509,
+    "lng": 51.4683177,
+    "mapsUrl": "https://www.google.com/maps/place/Dragon+Animal+Care+Center/@25.3100143,51.2684534,46860m/data=!3m1!1e3!4m11!1m2!2m1!1sveterinary+clinic+qatar!3m7!1s0x3e45dc613aa45aaf:0xf96b418c7ec930a9!8m2!3d25.3413509!4d51.4683177!10e2!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBD2FuaW1hbF9ob3NwaXRhbJoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VOUGJqZHBOMnRuUlJBQuABAPoBBAgAEDg!16s%2Fg%2F11gdyf51pn?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "element-city-center-doha",
+    "name": "Element City Center Doha",
+    "lat": 25.3275564,
+    "lng": 51.5310655,
+    "mapsUrl": "https://www.google.com/maps/place/Element+City+Center+Doha/@25.3280251,51.2446647,66183m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45d193e5f2bf1b:0xd9a2d2b4fd0abdc!5m2!4m1!1i2!8m2!3d25.3275564!4d51.5310655!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11q48gq7qy?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "element-west-bay-doha",
+    "name": "Element West Bay Doha",
+    "lat": 25.3294145,
+    "lng": 51.5340171,
+    "mapsUrl": "https://www.google.com/maps/place/Element+West+Bay+Doha/@25.3157741,51.2358489,66189m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c543e23015ab:0x635555e6518f500b!5m2!4m1!1i2!8m2!3d25.3294145!4d51.5340171!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11s98ttq93?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "elite-pet-veterinary-vet-clinic",
+    "name": "Elite Pet Veterinary (Vet) Clinic",
+    "lat": 25.2942115,
+    "lng": 51.4200859,
+    "mapsUrl": "https://www.google.com/maps/place/Elite+Pet+Veterinary+(Vet)+Clinic/@25.2942115,51.2159224,46866m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45d912aa721e1b:0x97bd3acb4188d60e!8m2!3d25.2942115!4d51.4200859!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VOWWFIUnRWa1JSRUFF4AEA-gEFCIkCEEs!16s%2Fg%2F11wbzyydbd?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "equine-veterinary-hospital-al-shaqab-evmc",
+    "name": "Equine Veterinary Hospital, Al Shaqab (EVMC)",
+    "lat": 25.308098,
+    "lng": 51.4434409,
+    "mapsUrl": "https://www.google.com/maps/place/Equine+Veterinary+Hospital,+Al+Shaqab+(EVMC)/@25.2942115,51.2159224,46866m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45dbf048a647a7:0xe83f1b273a10624b!8m2!3d25.308098!4d51.4434409!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBCGhvc3BpdGFsmgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDJ4T05XVkliRkJPYkU1b1ZWaFdiMVp0V2pGV2FsSlZVbXhhYTFWdVl4QULgAQD6AQUIwgEQSg!16s%2Fg%2F11g6mxc951?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "exotic-animals-vet-clinic",
+    "name": "Exotic Animals Vet Clinic",
+    "lat": 25.2796323,
+    "lng": 51.4872882,
+    "mapsUrl": "https://www.google.com/maps/place/Exotic+Animals+Vet+Clinic/@25.3100143,51.2684534,46860m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45db83772aabdd:0x37afd2606b174cbb!8m2!3d25.2796323!4d51.4872882!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQydzRkR0pYVGsxVWEwWmFWMVk1YUZaRVZucFRhM0JoVWtjeGJWTnVZeEFC4AEA-gEFCMEBEEw!16s%2Fg%2F11vwjk1s4f?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "fat-cat-café",
+    "name": "Fat Cat Café",
+    "lat": 25.3722221,
+    "lng": 51.5471639,
+    "mapsUrl": "https://www.google.com/maps/place/Fat+Cat+Caf%C3%A9/@25.3763274,51.1358365,93531m/data=!3m1!1e3!4m10!1m2!2m1!1spet+friendly+cafe+doha!3m6!1s0x3e45db868d7e3617:0x6fbff212a8cb9134!8m2!3d25.3722221!4d51.5471639!15sChZwZXQgZnJpZW5kbHkgY2FmZSBkb2hhWhgiFnBldCBmcmllbmRseSBjYWZlIGRvaGGSAQhjYXRfY2FmZZoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VSUWFrMTVUbFJCRUFF4AEA-gEECAAQSg!16s%2Fg%2F11n8488yv1?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "fatpawz-pet-salon-supplies-mobile-grooming",
+    "name": "Fatpawz Pet Salon, Supplies & Mobile Grooming",
+    "lat": 25.3183152,
+    "lng": 51.4933094,
+    "mapsUrl": "https://www.google.com/maps/place/Fatpawz+Pet+Salon,+Supplies+%26+Mobile+Grooming/@25.4143717,51.0961145,93625m/data=!3m1!1e3!4m11!1m2!2m1!1spets+grooming!3m7!1s0x3e45c53f927dd129:0x22697fb40f78982e!8m2!3d25.3183152!4d51.4933094!10e2!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VNeE0zQkxTMGQzRUFF4AEA-gEFCJECECk!16s%2Fg%2F11rxl88dm8?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "fiora-aquatic-pets",
+    "name": "Fiora Aquatic & Pets",
+    "lat": 25.2541683,
+    "lng": 51.5621113,
+    "mapsUrl": "https://www.google.com/maps/place/Fiora+Aquatic+%26+Pets/@25.3763274,51.135545,93598m/data=!3m1!1e3!4m12!1m3!2m2!1spet+shops!6e6!3m7!1s0x3e45cfd68f02a37f:0x47ef88a44829d536!8m2!3d25.2541683!4d51.5621113!10e2!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDJzMWQxSllaRzFTVjNCRlUwUktVbFV5VGs1V2JUbFpaRVJDZEZkWFl4QULgAQD6AQQIABBK!16s%2Fg%2F11pc98qzyl?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "fiora-pets",
+    "name": "Fiora Pets",
+    "lat": 25.2868664,
+    "lng": 51.5137528,
+    "mapsUrl": "https://www.google.com/maps/place/Fiora+Pets/@25.3599013,51.1116076,93667m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x54ac933d2626d71:0x564f862e63fd2281!8m2!3d25.2868664!4d51.5137528!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQlwZXRfc3RvcmWaASRDaGREU1VoTk1HOW5TMFZKUTBGblNVTmZNblpsWlhkQlJSQULgAQD6AQQIOBA5!16s%2Fg%2F11w1nhb62j?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "first-vet-فرست-البيطرية",
+    "name": "FIRST VET فرست البيطرية",
+    "lat": 25.2609018,
+    "lng": 51.4303209,
+    "mapsUrl": "https://www.google.com/maps/place/FIRST+VET+%D9%81%D8%B1%D8%B3%D8%AA+%D8%A7%D9%84%D8%A8%D9%8A%D8%B7%D8%B1%D9%8A%D8%A9%E2%80%AD/@25.2609018,51.2261574,46879m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45d9d1520adbe7:0x8b819ef2e5fd3b2f!8m2!3d25.2609018!4d51.4303209!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VRdGNXTXphVVpSRUFF4AEA-gEECBMQNA!16s%2Fg%2F11cmr4vy5p?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "fluffies-pet-stop-clinic",
+    "name": "Fluffies Pet Stop Clinic",
+    "lat": 25.2829478,
+    "lng": 51.5468171,
+    "mapsUrl": "https://www.google.com/maps/place/Fluffies+Pet+Stop+Clinic/@25.2829478,51.3426536,46871m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45dbc7167cf7f9:0xc6257ff563c82d34!8m2!3d25.2829478!4d51.5468171!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQydEtkV1ZJV21oWGJYQkxWVVZ3Y0dKSGJISlJWbkJ2VGtaQ1UyTnVZeEFC4AEA-gEFCPgCEEo!16s%2Fg%2F11rtqkmtyq?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "fluffy-tails",
+    "name": "Fluffy Tails",
+    "lat": 25.2884685,
+    "lng": 51.5468429,
+    "mapsUrl": "https://www.google.com/maps/place/Fluffy+Tails/@25.4143717,51.0961145,93625m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45dd0052d856f3:0x3dddb093821501ee!8m2!3d25.2884685!4d51.5468429!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuVFVOUmQzVkRUV1IzRUFF4AEA-gEFCI4CEEc!16s%2Fg%2F11x2xqqwwz?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "four-pets-veterinary-hospital",
+    "name": "Four Pets Veterinary Hospital",
+    "lat": 25.1699917,
+    "lng": 51.608235,
+    "mapsUrl": "https://www.google.com/maps/place/Four+Pets+Veterinary+Hospital/@25.1699917,51.4040715,46914m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45cba5db3258c9:0xfffc06d5f6da4f6!8m2!3d25.1699917!4d51.608235!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VSa056YzNialJuUlJBQuABAPoBBQi2ARBI!16s%2Fg%2F11tftxdp2f?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "four-seasons-hotel-doha",
+    "name": "Four Seasons Hotel Doha",
+    "lat": 25.3245,
+    "lng": 51.5390924,
+    "mapsUrl": "https://www.google.com/maps/place/Four+Seasons+Hotel+Doha/@25.3294145,51.245626,66182m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c52f78cd0d8d:0xc9a0e99b1a8ffa7b!5m2!4m1!1i2!8m2!3d25.3245!4d51.5390924!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F1tdsh7l2?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "four-seasons-resort-and-residences-at-the-pearl-qatar",
+    "name": "Four Seasons Resort and Residences at The Pearl-Qatar",
+    "lat": 25.3626051,
+    "lng": 51.5431965,
+    "mapsUrl": "https://www.google.com/maps/place/Four+Seasons+Resort+and+Residences+at+The+Pearl-Qatar/@25.39849,51.2314149,66144m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c36cea975513:0xc9499b61d07c68fc!5m2!4m1!1i2!8m2!3d25.3626051!4d51.5431965!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBDHJlc29ydF9ob3RlbKoBYgoIL20vMDY4aHkQASoWIhJwZXQgZnJpZW5kbHkgaG90ZWwoADIfEAEiG7PS1aJq6pJLnviyVK2rzB-TVJcN4oR3qsm4nDIbEAIiF3BldCBmcmllbmRseSBob3RlbCBkb2hh4AEA!16s%2Fg%2F11rmxsmhm1?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "fur-ever-fresh-for-animal-care",
+    "name": "Fur Ever Fresh For Animal Care",
+    "lat": 25.2912586,
+    "lng": 51.5119966,
+    "mapsUrl": "https://www.google.com/maps/place/Fur+Ever+Fresh+For+Animal+Care/@25.2912586,51.1037354,93720m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0xa27880124b10a693:0xd94bff1bf59aa946!8m2!3d25.2912586!4d51.5119966!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyeEZkRTlZY0ZoWWVteDBUbTEzTTJONlFqRk5SamxtVTFWVk5Ga3lZeEFC4AEA-gEECAAQTA!16s%2Fg%2F11xsg3k21b?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "furkids-sanctuary",
+    "name": "Furkids Sanctuary",
+    "lat": 25.5897093,
+    "lng": 51.3175889,
+    "mapsUrl": "https://www.google.com/maps/place/Furkids+Sanctuary/@25.5897093,50.7408067,132078m/data=!3m1!1e3!4m10!1m2!2m1!1sanimal+rescue+qatar!3m6!1s0x3e4607efe33f50dd:0x2b57d034fab72463!8m2!3d25.5897093!4d51.3175889!15sChNhbmltYWwgcmVzY3VlIHFhdGFyWhUiE2FuaW1hbCByZXNjdWUgcWF0YXKSARRwZXRfYWRvcHRpb25fc2VydmljZZoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQydHNhMlZJYkhkWU1VWkNVMnBrZVdNeU1XbGpiWEI0VkROT2JXRllZeEFC4AEA-gEECC8QPg!16s%2Fg%2F11mdhb2_z0?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "furry-tail-qatar-pet-supplies",
+    "name": "Furry Tail Qatar Pet Supplies",
+    "lat": 25.2712794,
+    "lng": 51.4826632,
+    "mapsUrl": "https://www.google.com/maps/place/Furry+Tail+Qatar+Pet+Supplies/@25.2438241,51.0491323,93701m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45db3cd8495703:0xbfe9a429e9fe94b1!8m2!3d25.2712794!4d51.4826632!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEQcGV0X3N1cHBseV9zdG9yZZoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQydEdNMDlVVmtoak1teElVbXBHYlZSSVFtNWhNblIxVmpCc1IxcElZeEFC4AEA-gEECAAQPQ!16s%2Fg%2F11mc_0k_lp?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "german-qatar-veterinary-clinic",
+    "name": "German Qatar Veterinary Clinic",
+    "lat": 25.2887856,
+    "lng": 51.5328771,
+    "mapsUrl": "https://www.google.com/maps/place/German+Qatar+Veterinary+Clinic/@25.2887856,51.3287136,46869m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45c53c29a6bfe7:0x3b6a1e558d9708c4!8m2!3d25.2887856!4d51.5328771!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBD2FuaW1hbF9ob3NwaXRhbJoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VReGFYVllVRWRuRUFF4AEA-gEECBIQRg!16s%2Fg%2F11csrrjrs6?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "glovet-veterinary",
+    "name": "Glovet Veterinary",
+    "lat": 25.2644633,
+    "lng": 51.4300335,
+    "mapsUrl": "https://www.google.com/maps/place/Glovet+Veterinary/@25.2644633,51.22587,46878m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45d98785664e51:0x28e406a984477686!8m2!3d25.2644633!4d51.4300335!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBE3ZldGVyaW5hcnlfcGhhcm1hY3maASRDaGREU1VoTk1HOW5TMFZKUTBGblNVUmxNbTlFTTNKM1JSQULgAQD6AQQIABBL!16s%2Fg%2F11g69yz28s?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "golden-paws-and-claws-veterinary-center",
+    "name": "Golden Paws and Claws Veterinary Center",
+    "lat": 25.335921,
+    "lng": 51.4678659,
+    "mapsUrl": "https://www.google.com/maps/place/Golden+Paws+and+Claws+Veterinary+Center/@25.335921,51.2637024,46850m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45ddeec6e06973:0x26f43e9329c0ac5c!8m2!3d25.335921!4d51.4678659!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VRM05IWnhUa3BCRUFF4AEA-gEECAAQSw!16s%2Fg%2F11y5z7d8_9?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "groom-me",
+    "name": "Groom-me",
+    "lat": 25.3217501,
+    "lng": 51.5334078,
+    "mapsUrl": "https://www.google.com/maps/place/Groom-me/@25.4143717,51.0961145,93625m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45c50042784bd9:0x654fbb74e4315db3!8m2!3d25.3217501!4d51.5334078!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VSaVgwdHhVMkozRUFF4AEA-gEECAAQOw!16s%2Fg%2F11vm59twt0?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "gulfcoast-veterinary-clinic",
+    "name": "Gulfcoast Veterinary Clinic",
+    "lat": 25.2671321,
+    "lng": 51.5086911,
+    "mapsUrl": "https://www.google.com/maps/place/Gulfcoast+Veterinary+Clinic/@25.2671321,51.3045276,46877m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45db4bb7545aad:0xf3f1fae6ba45c0fb!8m2!3d25.2671321!4d51.5086911!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyNXdUbFV4VVROU2JtaFVWbFZHYUdKdFZqVmxSWFJoV0RCd2FGWkhZeEFC4AEA-gEECF0QPw!16s%2Fg%2F11tbv0yh1v?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "hampton-by-hilton-doha-old-town",
+    "name": "Hampton by Hilton Doha Old Town",
+    "lat": 25.2891127,
+    "lng": 51.5461076,
+    "mapsUrl": "https://www.google.com/maps/place/Hampton+by+Hilton+Doha+Old+Town/@25.3288845,51.2419183,66182m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c512dcf8ca5f:0x6fe494cb446ee0a6!5m2!4m1!1i2!8m2!3d25.2891127!4d51.5461076!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11pv9hffgf?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "healthy-pet-center-عيادة-هيلثي-بت-سنتر",
+    "name": "Healthy Pet Center عيادة هيلثي بت سنتر",
+    "lat": 25.1826483,
+    "lng": 51.6015044,
+    "mapsUrl": "https://www.google.com/maps/place/Healthy+Pet+Center+%D8%B9%D9%8A%D8%A7%D8%AF%D8%A9+%D9%87%D9%8A%D9%84%D8%AB%D9%8A+%D8%A8%D8%AA+%D8%B3%D9%86%D8%AA%D8%B1%E2%80%AD/@25.1826483,51.3973409,46909m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45cb7660565ecb:0x74725d156450c25d!8m2!3d25.1826483!4d51.6015044!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBD2FuaW1hbF9ob3NwaXRhbJoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VOUGJFOHpRV3hCUlJBQuABAPoBBAgAEEM!16s%2Fg%2F11rjc000tm?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "home-stay",
+    "name": "Home Stay",
+    "lat": 25.2277824,
+    "lng": 51.5386634,
+    "mapsUrl": "https://www.google.com/maps/place/Home+Stay/@25.2870879,51.2580257,66205m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45cf1967e8fdcd:0xd93465b6107e589d!5m2!4m1!1i2!8m2!3d25.2277824!4d51.5386634!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBmhvc3RlbKoBYgoIL20vMDY4aHkQASoWIhJwZXQgZnJpZW5kbHkgaG90ZWwoADIfEAEiG7PS1aJq6pJLnviyVK2rzB-TVJcN4oR3qsm4nDIbEAIiF3BldCBmcmllbmRseSBob3RlbCBkb2hh4AEA!16s%2Fg%2F11h6nsq_yf?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "integrated-veterinary-services",
+    "name": "Integrated Veterinary Services",
+    "lat": 25.2645078,
+    "lng": 51.4302322,
+    "mapsUrl": "https://www.google.com/maps/place/Integrated+Veterinary+Services/@25.2471125,51.2171334,46885m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45d9455add0115:0x943110c449dd6b0a!8m2!3d25.2645078!4d51.4302322!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBE3ZldGVyaW5hcnlfcGhhcm1hY3ngAQA!16s%2Fg%2F11t6nzvwfc?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "just-furr-you",
+    "name": "Just Furr You",
+    "lat": 25.2495006,
+    "lng": 51.559794,
+    "mapsUrl": "https://www.google.com/maps/place/Just+Furr+You/@25.2495006,51.151777,93696m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45c581f51cbe0d:0x5e76b2546f8d4c2f!8m2!3d25.2495006!4d51.559794!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEQcGV0X3N1cHBseV9zdG9yZZoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VSQ1gyTnBaRFozUlJBQuABAPoBBAgAEBE!16s%2Fg%2F11j22sqqwp?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "kempinski-residences-suites-doha",
+    "name": "Kempinski Residences & Suites, Doha",
+    "lat": 25.3286512,
+    "lng": 51.5311897,
+    "mapsUrl": "https://www.google.com/maps/place/Kempinski+Residences+%26+Suites,+Doha/@25.2464145,51.263351,66227m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c4beaa8760d3:0xd314ccc903e767fe!5m2!4m1!1i2!8m2!3d25.3286512!4d51.5311897!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11c5rms3yk?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "kingdom-of-birds-2",
+    "name": "Kingdom of Birds",
+    "lat": 25.2737367,
+    "lng": 51.4993859,
+    "mapsUrl": "https://www.google.com/maps/place/Kingdom+of+Birds/@25.3379008,51.0511489,93628m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45dabf55153355:0xf0ae7f8f057b48bc!8m2!3d25.2737367!4d51.4993859!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDJ4R2RXVnNUbEJNVlRGWFdESlNORTFJV2tWUlZUUjBUa1ZzYzAxclJSQULgAQD6AQQIABBK!16s%2Fg%2F11hbvs742g?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "kingdom-of-birds",
+    "name": "Kingdom Of Birds",
+    "lat": 25.3621936,
+    "lng": 51.4468017,
+    "mapsUrl": "https://www.google.com/maps/place/Kingdom+Of+Birds/@25.2438241,51.0491323,93701m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45dd5614c13ba7:0x8a7066a26a266119!8m2!3d25.3621936!4d51.4468017!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgEkQ2hkRFNVaE5NRzluUzBWSlEwRm5UVVIzWjFCVGRXeDNSUkFC4AEA-gEECAAQNw!16s%2Fg%2F11gnrw6kl7?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "kitty-cafe-2",
+    "name": "Kitty Cafe",
+    "lat": 25.4056577,
+    "lng": 51.5235501,
+    "mapsUrl": "https://www.google.com/maps/place/Kitty+Cafe/@25.4056577,51.4875012,8268m/data=!3m1!1e3!4m10!1m2!2m1!1scat+cafe+doha!3m6!1s0x3e45c316bd47e78b:0x78e2b1aafdd03e94!8m2!3d25.4056577!4d51.5235501!15sCg1jYXQgY2FmZSBkb2hhWg8iDWNhdCBjYWZlIGRvaGGSAQRjYWZl4AEA!16s%2Fg%2F11x1j_222n?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "kitty-cafe",
+    "name": "Kitty Cafe",
+    "lat": 25.4013621,
+    "lng": 51.5122864,
+    "mapsUrl": "https://www.google.com/maps/place/Kitty+Cafe/@25.3763274,51.1358365,93531m/data=!3m1!1e3!4m10!1m2!2m1!1spet+friendly+cafe+doha!3m6!1s0x3e45e79cd3f30b8d:0xf68758751ca58f5c!8m2!3d25.4013621!4d51.5122864!15sChZwZXQgZnJpZW5kbHkgY2FmZSBkb2hhWhgiFnBldCBmcmllbmRseSBjYWZlIGRvaGGSAQRjYWZlmgEjQ2haRFNVaE5NRzluUzBWSlEwRm5TVVJFY25WMVdHVm5FQUXgAQD6AQUIkQEQRw!16s%2Fg%2F11thlg8_yb?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "la-villa-hotel",
+    "name": "La Villa Hotel",
+    "lat": 25.285748,
+    "lng": 51.5388933,
+    "mapsUrl": "https://www.google.com/maps/place/La+Villa+Hotel/@25.3245375,51.2487968,66185m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c56b2aeaf447:0x2079f97da5e3fe5e!5m2!4m1!1i2!8m2!3d25.285748!4d51.5388933!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F1hf4krxmq?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "la-villa-inn-hotel-apartments",
+    "name": "La Villa Inn Hotel Apartments",
+    "lat": 25.2708835,
+    "lng": 51.5386915,
+    "mapsUrl": "https://www.google.com/maps/place/La+Villa+Inn+Hotel+Apartments/@25.3276521,51.2448331,66183m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c56b2c4ed767:0xa96d6b5089d67f04!5m2!4m1!1i2!8m2!3d25.2708835!4d51.5386915!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F1thl3x8t?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "la-villa-suites",
+    "name": "La Villa Suites",
+    "lat": 25.2704895,
+    "lng": 51.538707,
+    "mapsUrl": "https://www.google.com/maps/place/La+Villa+Suites/@25.285748,51.2505022,66206m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c56129d9bc19:0x12fcb95c008ab27a!5m2!4m1!1i2!8m2!3d25.2704895!4d51.538707!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F1hdzglsxk?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "larche-dog-park",
+    "name": "L'Arche Dog Park",
+    "lat": 25.2985228,
+    "lng": 51.5124772,
+    "mapsUrl": "https://www.google.com/maps/place/L'Arche+Dog+Park/@25.2907094,51.3004563,46868m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45db000a3ea291:0xead653b9692c913b!8m2!3d25.2985228!4d51.5124772!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBC3BldF9ncm9vbWVymgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDIxc1dsZHRXbk5YUkVaS1drZGtUV1JJWkZaWFJWcDFWa1ZqTUU1WVl4QULgAQD6AQQIIBA1!16s%2Fg%2F11ww84cwmg?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "larche-vet-clinic",
+    "name": "L'Arche Vet Clinic",
+    "lat": 25.1555677,
+    "lng": 51.5929688,
+    "mapsUrl": "https://www.google.com/maps/place/L'Arche+Vet+Clinic/@25.1555677,51.3888053,46920m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45cd6f26d6c57b:0xeadb5d426275dd28!8m2!3d25.1555677!4d51.5929688!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBHmVtZXJnZW5jeV92ZXRlcmluYXJpYW5fc2VydmljZZoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VORWFscFBTbGhCRUFF4AEA-gEECAAQQg!16s%2Fg%2F11rzrlmqy0?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "lee-lee-pets-grooming-service",
+    "name": "Lee Lee Pets Grooming Service",
+    "lat": 25.1637755,
+    "lng": 51.5170912,
+    "mapsUrl": "https://www.google.com/maps/place/Lee+Lee+Pets+Grooming+Service/@25.332455,51.0700938,93688m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45cd00705b2395:0x26b3864bcb9e7cc9!8m2!3d25.1637755!4d51.5170912!15sCg1wZXRzIGdyb29taW5nkgELcGV0X2dyb29tZXLgAQA!16s%2Fg%2F11z0pkrw_5?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "leelee-grooming-trading",
+    "name": "LeeLee Grooming Trading",
+    "lat": 25.3281457,
+    "lng": 51.4552645,
+    "mapsUrl": "https://www.google.com/maps/place/LeeLee+Grooming+Trading/@25.2985228,51.104216,93714m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45c5c7eb59f535:0x839a08d2e1cc9b9d!8m2!3d25.3281457!4d51.4552645!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBI0NoWkRTVWhOTUc5blMwVk1hVlpzY2pNeU1HTjZSbGxCRUFF4AEA-gEFCOkBEDU!16s%2Fg%2F11vkcpl685?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "luckypaws-mobil-pet-grooming",
+    "name": "Luckypaws mobil pet grooming",
+    "lat": 25.3134481,
+    "lng": 51.4858939,
+    "mapsUrl": "https://www.google.com/maps/place/Luckypaws+mobil+pet+grooming/@25.2985228,51.104216,93714m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45db312e020bbd:0x5906773e6aadbd75!8m2!3d25.3134481!4d51.4858939!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VScU1GQlFaakJSUlJBQuABAPoBBAgAECs!16s%2Fg%2F11vr_3xwv8?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "marias-pet-services",
+    "name": "Maria's Pet Services",
+    "lat": 25.3185486,
+    "lng": 51.492736,
+    "mapsUrl": "https://www.google.com/maps/place/Maria's+Pet+Services/@25.2840091,51.1037354,93726m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45db5deb166681:0xb34133551e254818!8m2!3d25.3185486!4d51.492736!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQlwZXRfc3RvcmWaASNDaFpEU1VoTk1HOW5TMFZKUTBGblNVUnllVXczUlV4UkVBReABAPoBBAhcEC0!16s%2Fg%2F11vs_88bg1?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "mascotas",
+    "name": "Mascotas",
+    "lat": 25.2856448,
+    "lng": 51.5233327,
+    "mapsUrl": "https://www.google.com/maps/place/Mascotas/@25.2415616,51.0413941,93758m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45c56af9fd3495:0x49492e428c7cec6b!8m2!3d25.2856448!4d51.5233327!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQlwZXRfc3RvcmWaASRDaGREU1VoTk1HOW5TMFZKUTBGblNVUlNObVV5Wld4QlJSQULgAQD6AQQIABAV!16s%2Fg%2F11txvngvjj?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "meow-zone",
+    "name": "meow zone",
+    "lat": 25.3282729,
+    "lng": 51.454868,
+    "mapsUrl": "https://www.google.com/maps/place/meow+zone/@25.2985228,51.104216,93714m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45e3ceecca8129:0xf99c6bb46e577d2f!8m2!3d25.3282729!4d51.454868!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQlwZXRfc3RvcmWaASNDaFpEU1VoTk1HOW5TMFZQTjBaM2RrZENYMHRsZEVOM0VBReABAPoBBAg1EC0!16s%2Fg%2F11l1l0s9hd?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "mini-zoo-pet-shop-the-pearl-branch",
+    "name": "Mini Zoo Pet Shop - The Pearl Branch",
+    "lat": 25.3771371,
+    "lng": 51.5436699,
+    "mapsUrl": "https://www.google.com/maps/place/Mini+Zoo+Pet+Shop+-+The+Pearl+Branch/@25.2985228,51.104216,93714m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45c34edc5bad5d:0x62cc0dff5efbe51c!8m2!3d25.3771371!4d51.5436699!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQlwZXRfc3RvcmWaAURDaTlEUVVsUlFVTnZaRU5vZEhsalJqbHZUMjVOZDFWRVRtdFphbFoyWTFkSk1HUXdXbE5hYlVwaFRWZEdlazVGUlJBQuABAPoBBAgAEEQ!16s%2Fg%2F11khd0fpb3?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "mini-zoo-pets-shop",
+    "name": "Mini Zoo Pets Shop",
+    "lat": 25.3085006,
+    "lng": 51.4966499,
+    "mapsUrl": "https://www.google.com/maps/place/Mini+Zoo+Pets+Shop/@25.372226,51.1464952,93601m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45db33d78ac481:0x11539617e880de4f!8m2!3d25.3085006!4d51.4966499!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgEkQ2hkRFNVaE5NRzluUzBWSlEwRm5TVU40TWtwSGVETlJSUkFC4AEA-gEECAAQQA!16s%2Fg%2F11fl8_vy5s?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "mme-animal-resources-department-qatar",
+    "name": "MME Animal Resources Department Qatar",
+    "lat": 25.2887698,
+    "lng": 51.5444884,
+    "mapsUrl": "https://www.google.com/maps/place/MME+Animal+Resources+Department+Qatar/@25.2887698,51.3403249,46869m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45c512dd16fe8b:0x4a9211f7e3e19057!8m2!3d25.2887698!4d51.5444884!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBEWdvdmVybm1lbnRfb2ZmaWNlmgEjQ2haRFNVaE5NRzluUzBWSlEwRm5TVVJQZW05aVQySlJFQUXgAQD6AQQIIhBJ!16s%2Fg%2F11c5bjh6b9?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "mobile-pets-grooming",
+    "name": "mobile pets grooming",
+    "lat": 25.2883793,
+    "lng": 51.5171776,
+    "mapsUrl": "https://www.google.com/maps/place/mobile+pets+grooming/@25.2985228,51.104216,93714m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45c5b09c2e7a9d:0x9d045f04cfc86520!8m2!3d25.2883793!4d51.5171776!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQpoYWlyX3NhbG9umgEkQ2hkRFNVaE5NRzluUzBWSlEwRm5TVU5xZW05NUxYbDNSUkFC4AEA-gEFCIIBEEc!16s%2Fg%2F11s1bgcvzd?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "mockingbird-cafe",
+    "name": "mockingbird cafe",
+    "lat": 25.4156678,
+    "lng": 51.4986629,
+    "mapsUrl": "https://www.google.com/maps/place/mockingbird+cafe/@25.3763274,51.1358365,93531m/data=!3m1!1e3!4m10!1m2!2m1!1spet+friendly+cafe+doha!3m6!1s0x3e45e797154f3a65:0xf22c172e30460546!8m2!3d25.4156678!4d51.4986629!15sChZwZXQgZnJpZW5kbHkgY2FmZSBkb2hhWhgiFnBldCBmcmllbmRseSBjYWZlIGRvaGGSAQRjYWZlmgEjQ2haRFNVaE5NRzluUzBWT055MHdObDkyWDFCUVIyRjNFQUXgAQD6AQQIABAe!16s%2Fg%2F11tjkbw1r3?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "mondrian-doha",
+    "name": "Mondrian Doha",
+    "lat": 25.3764086,
+    "lng": 51.5235518,
+    "mapsUrl": "https://www.google.com/maps/place/Mondrian+Doha/@25.27337,51.2527179,66213m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c328d0a591c1:0x8dc2d9b6026a42cd!5m2!4m1!1i2!8m2!3d25.3764086!4d51.5235518!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11fzfbrw4d?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "mr-vet-pets-clinic",
+    "name": "Mr. Vet Pets Clinic",
+    "lat": 25.2206851,
+    "lng": 51.4662944,
+    "mapsUrl": "https://www.google.com/maps/place/Mr.+Vet+Pets+Clinic/@25.2206851,51.2621309,46895m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45d10576b17e53:0x68076b4d62f6b5bb!8m2!3d25.2206851!4d51.4662944!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VSS01rOU1ZbTluUlJBQuABAPoBBAgAECU!16s%2Fg%2F11rsh0yy3m?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "nap-and-wag-inn-qatar",
+    "name": "Nap and Wag Inn Qatar",
+    "lat": 25.2810448,
+    "lng": 51.5498699,
+    "mapsUrl": "https://www.google.com/maps/place/Nap+and+Wag+Inn+Qatar/@25.332455,51.0700938,93688m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45c5fc34625381:0x15fab2e98976b162!8m2!3d25.2810448!4d51.5498699!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSARRwZXRfYm9hcmRpbmdfc2VydmljZZoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQycGFhMlJHWnpGVVJtODBWMVpPYjAwd2JFOWxiRkkwWVVWR1VsTlZSUkFC4AEA-gEECAAQSw!16s%2Fg%2F11yhk9v3xb?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "nine-lives-cat-cafe",
+    "name": "Nine Lives Cat Cafe",
+    "lat": 25.3763274,
+    "lng": 51.543562,
+    "mapsUrl": "https://www.google.com/maps/place/Nine+Lives+Cat+Cafe/@25.3763274,51.1358365,93531m/data=!3m1!1e3!4m10!1m2!2m1!1spet+friendly+cafe+doha!3m6!1s0x3e45c3006060012b:0xc7f17f2adb298205!8m2!3d25.3763274!4d51.543562!15sChZwZXQgZnJpZW5kbHkgY2FmZSBkb2hhWhgiFnBldCBmcmllbmRseSBjYWZlIGRvaGGSAQtjb2ZmZWVfc2hvcJoBJENoZERTVWhOTUc5blMwVlFjbGMyU1V0Uk5qUXphSGhSUlJBQuABAPoBBAgAEEY!16s%2Fg%2F11y9_ffk6s?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "nova-veterinary-hospital-مستشفى-نوفا-البيطري",
+    "name": "Nova Veterinary Hospital | مستشفى نوفا البيطري",
+    "lat": 25.3784375,
+    "lng": 51.5446875,
+    "mapsUrl": "https://www.google.com/maps/place/Nova+Veterinary+Hospital+%7C+%D9%85%D8%B3%D8%AA%D8%B4%D9%81%D9%89+%D9%86%D9%88%D9%81%D8%A7+%D8%A7%D9%84%D8%A8%D9%8A%D8%B7%D8%B1%D9%8A%E2%80%AD/@25.3784375,51.340524,46834m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45c3e3e588adc5:0xadec416121e402dd!8m2!3d25.3784375!4d51.5446875!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyeG9SMDFIZDNsa1JUVjNZVEpPZUZaV1ZrcGhSMHBzVlVWak5WZ3hSUkFC4AEA-gEFCNsDED0!16s%2Fg%2F11jzrhy160?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "oryx-veterinary-center",
+    "name": "Oryx Veterinary Center",
+    "lat": 25.2415616,
+    "lng": 51.4496553,
+    "mapsUrl": "https://www.google.com/maps/place/Oryx+Veterinary+Center/@25.2547614,51.2419065,46882m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45dbb5e258f3cd:0x6087d4e5e1c6aaea!8m2!3d25.2415616!4d51.4496553!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBD2FuaW1hbF9ob3NwaXRhbJoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyMU9ObVJ1UVRKalJ6RlRXbFphVGs1c1ZtdE5iRkY1VTJwQ1ZGVXlZeEFC4AEA-gEECFsQNA!16s%2Fg%2F11w1pwt0lz?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "osq-for-pets-in-qatar",
+    "name": "OSQ for Pets in Qatar",
+    "lat": 25.2896257,
+    "lng": 51.5429451,
+    "mapsUrl": "https://www.google.com/maps/place/OSQ+for+Pets+in+Qatar/@25.2896257,51.1349281,93665m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45c58ecc0b4175:0xe1556e8b5b8dd28e!8m2!3d25.2896257!4d51.5429451!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgEjQ2haRFNVaE5NRzluUzBWSlEwRm5TVVJDYkhSbFNVVm5FQUXgAQD6AQQIQBA9!16s%2Fg%2F11rjv_0gq4?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pampered-pets-qatar",
+    "name": "Pampered Pets Qatar",
+    "lat": 25.533242,
+    "lng": 51.3760556,
+    "mapsUrl": "https://www.google.com/maps/place/Pampered+Pets+Qatar/@25.533242,50.9677944,93532m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45e2cd0116c077:0x9be3877fc478201d!8m2!3d25.533242!4d51.3760556!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSARRwZXRfYm9hcmRpbmdfc2VydmljZZoBI0NoWkRTVWhOTUc5blMwVkpRMEZuVFVOSmFqaDFTVmRuRUFF4AEA-gEFCLUBEEk!16s%2Fg%2F11c2k28b0s?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "parkview-pet-center-veterinary-clinic",
+    "name": "Parkview Pet Center - Veterinary Clinic",
+    "lat": 25.332455,
+    "lng": 51.478355,
+    "mapsUrl": "https://www.google.com/maps/place/Parkview+Pet+Center+-+Veterinary+Clinic/@25.332455,51.2741915,46852m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45dc83fe374a87:0xb34baae1a5469b7f!8m2!3d25.332455!4d51.478355!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyNWFhbU5FVm5sWFZXZ3hUMWhPVjFwR2FHWldWamxYWkc1d2RWWnNSUkFC4AEA-gEECAAQSA!16s%2Fg%2F1hhk6bjdg?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pawadise-for-animal-care",
+    "name": "Pawadise for Animal Care",
+    "lat": 25.2840091,
+    "lng": 51.5119966,
+    "mapsUrl": "https://www.google.com/maps/place/Pawadise+for+Animal+Care/@25.332455,51.0700938,93688m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x6e6a9fa66a47ed5f:0x1a43ebd1579502d7!8m2!3d25.2840091!4d51.5119966!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VOaWFGbEhTbDkzUlJBQuABAPoBBQisARA7!16s%2Fg%2F11y6kph0hg?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pawfection",
+    "name": "Pawfection",
+    "lat": 25.3274248,
+    "lng": 51.513271,
+    "mapsUrl": "https://www.google.com/maps/place/Pawfection/@25.4143717,51.0961145,93625m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45dbec45530e15:0x33ae033dcff9c013!8m2!3d25.3274248!4d51.513271!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VScWJtSkRkRTlSRUFF4AEA-gEECAAQSg!16s%2Fg%2F11vx4wlpc_?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pawprint-veterinary-clinic",
+    "name": "PawPrint Veterinary Clinic",
+    "lat": 25.4206771,
+    "lng": 51.5026733,
+    "mapsUrl": "https://www.google.com/maps/place/PawPrint+Veterinary+Clinic/@25.4206771,51.2985098,46817m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45e700183f32c1:0x340272501d4b71be!8m2!3d25.4206771!4d51.5026733!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQydzVNVTFYT0hwaGJsWlJVVmhhVEU1dGFHeFViWGhWV2taR1dsVklZeEFC4AEA-gEFCPoBEEI!16s%2Fg%2F11x_ftgc4g?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pawzville-pet-boarding-daycare-qatar",
+    "name": "Pawzville Pet Boarding & Daycare Qatar",
+    "lat": 25.0795303,
+    "lng": 51.478493,
+    "mapsUrl": "https://www.google.com/maps/place/Pawzville+Pet+Boarding+%26+Daycare+Qatar/@25.2942115,51.0118247,93718m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e442d94c9733adb:0x70b92bd66123143b!8m2!3d25.0795303!4d51.478493!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSARRwZXRfYm9hcmRpbmdfc2VydmljZZoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyNUtWMDVYVmxWVFZsbDZWV3RTUTJSVVNtMWFibWhRVEZWYVJGWklZeEFC4AEA-gEFCKkBEEY!16s%2Fg%2F11vryzln5j?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pet-glow-pet-grooming-dohaqatar-pet-supplies-and-products",
+    "name": "PET GLOW - Pet grooming Doha,Qatar & Pet Supplies and Products",
+    "lat": 25.3061568,
+    "lng": 51.4984276,
+    "mapsUrl": "https://www.google.com/maps/place/PET+GLOW+-+Pet+grooming+Doha,Qatar+%26+Pet+Supplies+and+Products/@25.4143717,51.0961145,93625m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45dbf96d15cdbd:0xa896dab266b8dc39!8m2!3d25.3061568!4d51.4984276!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQlwZXRfc3RvcmWaAURDaTlEUVVsUlFVTnZaRU5vZEhsalJqbHZUMnROTlZKRlZqVmpSMDVwWlVoT1lWTnNWbEZPZW10NlZHNWtURkZYWXhBQuABAPoBBAgaEEA!16s%2Fg%2F11mktfhcdc?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pet-grooming-van-for-dogs-and-cats-home-service",
+    "name": "Pet Grooming Van for Dogs and Cats - Home service",
+    "lat": 25.3281027,
+    "lng": 51.2137034,
+    "mapsUrl": "https://www.google.com/maps/place/Pet+Grooming+Van+for+Dogs+and+Cats+-+Home+service/@25.3281027,50.8054422,93692m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0xad5412ecf9739c59:0x4204550c2c9a469b!8m2!3d25.3281027!4d51.2137034!15sCg1wZXRzIGdyb29taW5nkgELcGV0X2dyb29tZXLgAQA!16s%2Fg%2F11m6yn5vtg?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pet-land",
+    "name": "Pet land",
+    "lat": 25.1792774,
+    "lng": 51.6031222,
+    "mapsUrl": "https://www.google.com/maps/place/Pet+land/@25.1792774,51.1951052,93750m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45cbe0e664c27d:0x674eee952bd7532a!8m2!3d25.1792774!4d51.6031222!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgEjQ2haRFNVaE5NRzluUzBWSlEwRm5TVU5pZVZsNlFVTlJFQUXgAQD6AQQIABAX!16s%2Fg%2F11rr5st9ct?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pet-lounge",
+    "name": "Pet Lounge",
+    "lat": 25.6695044,
+    "lng": 51.5015685,
+    "mapsUrl": "https://www.google.com/maps/place/Pet+Lounge/@25.2912586,51.1037354,93720m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45f90013883d2b:0x1c113168d7f2508b!8m2!3d25.6695044!4d51.5015685!15sCg1wZXRzIGdyb29taW5nkgEFc3RvcmXgAQA!16s%2Fg%2F11w1ckcb8m?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pet-oasis-trading",
+    "name": "Pet Oasis Trading",
+    "lat": 25.3146791,
+    "lng": 51.4849511,
+    "mapsUrl": "https://www.google.com/maps/place/Pet+Oasis+Trading/@25.2912586,51.1037354,93720m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45dbc73f560cd3:0x1bfb967d8f9f9742!8m2!3d25.3146791!4d51.4849511!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSARBwZXRfc3VwcGx5X3N0b3JlmgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDI1YWIxRXllRVprZVRGclZXMTBNMlZyWkZoaGJYaFhVVE5hYTA0eFJSQULgAQD6AQUIpQEQMg!16s%2Fg%2F11xcx_dgxd?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pet-palace",
+    "name": "Pet Palace",
+    "lat": 25.3458296,
+    "lng": 51.4495511,
+    "mapsUrl": "https://www.google.com/maps/place/Pet+Palace/@25.3458296,51.0412899,93678m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45dd47014fab05:0xeb25ed8d3eb39849!8m2!3d25.3458296!4d51.4495511!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQlwZXRfc3RvcmWaASRDaGREU1VoTk1HOW5TMFZKUTBGblNVUm1kWFpZVURaQlJSQULgAQD6AQQIABAh!16s%2Fg%2F11w7k2wmy9?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pet-station-2",
+    "name": "Pet Station",
+    "lat": 25.3467636,
+    "lng": 51.4855493,
+    "mapsUrl": "https://www.google.com/maps/place/Pet+Station/@25.2840091,51.1037354,93726m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45ddd0b2a45e85:0x67c94c0f7467ea15!8m2!3d25.3467636!4d51.4855493!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSARBwZXRfc3VwcGx5X3N0b3JlmgEkQ2hkRFNVaE5NRzluUzBWSlEwRm5TVVJFWnkxMVh6WjNSUkFC4AEA-gEECFMQFw!16s%2Fg%2F11vt6plxw3?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pet-station",
+    "name": "Pet station",
+    "lat": 25.2907094,
+    "lng": 51.5046198,
+    "mapsUrl": "https://www.google.com/maps/place/Pet+station/@25.2907094,51.3004563,46868m/data=!3m1!1e3!4m11!1m2!2m1!1sveterinary+clinic+qatar!3m7!1s0x3e45c5e905ed4513:0x4b9ca1ae7089f4e8!8m2!3d25.2907094!4d51.5046198!10e2!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBCXBldF9zdG9yZZoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQycHJORkpYVmxCU2JFWlNWMVpzYlZaRVRtdFVSM2hYVkhwS1RtRXhSUkFC4AEA-gEECAAQSw!16s%2Fg%2F11fmrmlq_k?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pet-universe-trading",
+    "name": "Pet Universe Trading",
+    "lat": 25.2474386,
+    "lng": 51.4553585,
+    "mapsUrl": "https://www.google.com/maps/place/Pet+Universe+Trading/@25.2912586,51.1037354,93720m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45db1ca601fc59:0xd44c9b629f6ace!8m2!3d25.2474386!4d51.4553585!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQlwZXRfc3RvcmWaAURDaTlEUVVsUlFVTnZaRU5vZEhsalJqbHZUMnQ0U0ZreVkzcGlWR2hwVFRCYVpsaDZTWFJsVnpGWFpWUm9kV0Z0WXhBQuABAPoBBAgAEEA!16s%2Fg%2F11ykmjc_k9?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "petbaba-pet-store-office",
+    "name": "PetBaba – Pet Store & Office",
+    "lat": 25.3062724,
+    "lng": 51.4983704,
+    "mapsUrl": "https://www.google.com/maps/place/PetBaba+%E2%80%93+Pet+Store+%26+Office/@25.2912586,51.1037354,93720m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45db0d2630831f:0x984eee2d4cfe9cfc!8m2!3d25.3062724!4d51.4983704!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQlwZXRfc3RvcmWaAURDaTlEUVVsUlFVTnZaRU5vZEhsalJqbHZUMnhzVjFwVldrSk5Wa0Y0VlZkc1RXUkhNVlJoV0d3MFl6Sk9ORkZXUlJBQuABAPoBBAgAEDM!16s%2Fg%2F11mdpb_pdg?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "petcentral-qatar",
+    "name": "PetCentral Qatar",
+    "lat": 25.308213,
+    "lng": 51.4623528,
+    "mapsUrl": "https://www.google.com/maps/place/PetCentral+Qatar/@25.2912586,51.1037354,93720m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45db3c447dfa4b:0xa117244d7c82afb!8m2!3d25.308213!4d51.4623528!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQlwZXRfc3RvcmWaAURDaTlEUVVsUlFVTnZaRU5vZEhsalJqbHZUMnBrYzFveU9UWk5TRXBhVmxoQmVWRldRbXhWTTJoeldUTldObFV3UlJBQuABAPoBBAh2EDk!16s%2Fg%2F11yzb9x700?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pets-care-veterinary-al-waab",
+    "name": "Pets Care Veterinary (Al Waab)",
+    "lat": 25.2660642,
+    "lng": 51.4680829,
+    "mapsUrl": "https://www.google.com/maps/place/Pets+Care+Veterinary+(Al+Waab)/@25.332455,51.2741915,46852m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45db726d7a16e9:0xdf5867febd30e5a2!8m2!3d25.2660642!4d51.4680829!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyNU9SV1ZJVFhkYVZFNXJURlZHUjJSSFNqUlZiWGcyWWpBME0xVkZSUkFC4AEA-gEECCIQLA!16s%2Fg%2F11t0rwnykj?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pets-care-veterinary-center",
+    "name": "Pets Care Veterinary Center",
+    "lat": 25.2605897,
+    "lng": 51.5162242,
+    "mapsUrl": "https://www.google.com/maps/place/Pets+Care+Veterinary+Center/@25.2605897,51.3120607,46879m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45c5553c143a4d:0x2ae0067adafc7b91!8m2!3d25.2605897!4d51.5162242!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VSUWR6UmlWRlZSRUFF4AEA-gEECAAQMw!16s%2Fg%2F1pzyw7d6k?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pets-grooming-al-khor-mobie-van-service",
+    "name": "Pets Grooming Al Khor mobie Van Service",
+    "lat": 25.6804078,
+    "lng": 51.4968502,
+    "mapsUrl": "https://www.google.com/maps/place/Pets+Grooming+Al+Khor+mobie+Van+Service/@25.3616399,51.0383516,93666m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45f924b98dec87:0x35e3864e5bb8d79b!8m2!3d25.6804078!4d51.4968502!15sCg1wZXRzIGdyb29taW5nkgELcGV0X2dyb29tZXLgAQA!16s%2Fg%2F11wh5lkv_h?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pets-grooming-qatar-van-service",
+    "name": "Pets Grooming Qatar Van Service",
+    "lat": 25.2541697,
+    "lng": 51.5621995,
+    "mapsUrl": "https://www.google.com/maps/place/Pets+Grooming+Qatar+Van+Service/@25.2985228,51.104216,93714m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45cf72b9acfedd:0x63379be2fed52b88!8m2!3d25.2541697!4d51.5621995!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VRM2FUbHlSM1ZSUlJBQuABAPoBBAgAEEg!16s%2Fg%2F11ln52g5n9?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pets-hospital-qatar",
+    "name": "Pets hospital Qatar",
+    "lat": 25.2671455,
+    "lng": 51.5085547,
+    "mapsUrl": "https://www.google.com/maps/place/Pets+hospital+Qatar/@25.2671455,51.3043912,46877m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45db5fd10650f1:0xd80620fc461a67ee!8m2!3d25.2671455!4d51.5085547!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBBWhvdGVsmgEkQ2hkRFNVaE5NRzluUzBWSlEwRm5TVU5vZUhWTVUyNVJSUkFC4AEA-gEECCAQSQ!16s%2Fg%2F11jcqkcky7?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pets-inc-gharafa",
+    "name": "Pets Inc. - Gharafa",
+    "lat": 25.3379008,
+    "lng": 51.4591659,
+    "mapsUrl": "https://www.google.com/maps/place/Pets+Inc.+-+Gharafa/@25.3616399,51.0383516,93666m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45dd0058cc14fd:0xa53c205dcf65a0a4!8m2!3d25.3379008!4d51.4591659!15sCg1wZXRzIGdyb29taW5nkgEJcGV0X3N0b3Jl4AEA!16s%2Fg%2F11zjvh8c39?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pets-inc-the-pearl",
+    "name": "Pets INC. - The Pearl",
+    "lat": 25.372226,
+    "lng": 51.5545122,
+    "mapsUrl": "https://www.google.com/maps/place/Pets+INC.+-+The+Pearl/@25.372226,51.146251,93657m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45c3a1dad9c35d:0x7b3433c8635cb320!8m2!3d25.372226!4d51.5545122!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSARBwZXRfc3VwcGx5X3N0b3JlmgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDIxak5GWXdUbFZrTW1zMFVrWk9NMkpFVmxKYVF6RjRWVzFHUTFvd1JSQULgAQD6AQUImwEQKw!16s%2Fg%2F11wj2hrjq9?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pets-lounge",
+    "name": "Pets Lounge",
+    "lat": 25.6673125,
+    "lng": 51.4880625,
+    "mapsUrl": "https://www.google.com/maps/place/Pets+Lounge/@25.2985228,51.104216,93714m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45f9a2473860c7:0x5c9f88a357f2e0fc!8m2!3d25.6673125!4d51.4880625!15sCg1wZXRzIGdyb29taW5nkgELcGV0X2dyb29tZXLgAQA!16s%2Fg%2F11s0nf2dkx?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pets-qatar",
+    "name": "Pets Qatar",
+    "lat": 25.2714443,
+    "lng": 51.5088584,
+    "mapsUrl": "https://www.google.com/maps/place/Pets+Qatar/@25.2985228,51.104216,93714m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45dbc7cc52ae21:0xa7f0ba90e4e56eeb!8m2!3d25.2714443!4d51.5088584!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSARBwZXRfc3VwcGx5X3N0b3JlmgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDI1R1dHVkliRE5OVlZaTVdXdHdZV0V6V25sYWVsWXpVMGRvUW1KRlJSQULgAQD6AQQIABBI!16s%2Fg%2F11ssdhk_dk?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pets-store",
+    "name": "PETS STORE",
+    "lat": 25.2690587,
+    "lng": 51.5083935,
+    "mapsUrl": "https://www.google.com/maps/place/PETS+STORE/@25.3763274,51.135545,93598m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45db5c530aba79:0xc5cc0b84bab95b15!8m2!3d25.2690587!4d51.5083935!15sCglwZXQgc2hvcHOSARBwZXRfc3VwcGx5X3N0b3Jl4AEA!16s%2Fg%2F11xw53mt15?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "pets-veterinary-clinic-pvc",
+    "name": "Pets Veterinary Clinic (PVC)",
+    "lat": 25.2699375,
+    "lng": 51.5058637,
+    "mapsUrl": "https://www.google.com/maps/place/Pets+Veterinary+Clinic+(PVC)/@25.335921,51.2637024,46850m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x88ed2946c775cb89:0x73781ede4484298a!8m2!3d25.2699375!4d51.5058637!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQydGtSVmxYU1RSaFIzQkNVbFJCZEZkclkzbE5XRTVEV1d4YVpsTldSUkFC4AEA-gEECBEQOA!16s%2Fg%2F11mm74g30y?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "petvet-care-hotel-and-clinic",
+    "name": "PetVet Care Hotel and Clinic",
+    "lat": 25.2892482,
+    "lng": 51.5327584,
+    "mapsUrl": "https://www.google.com/maps/place/PetVet+Care+Hotel+and+Clinic/@25.2892482,51.3285949,46868m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45c5bfb4ce8dc1:0x468ed2cf269c3adf!8m2!3d25.2892482!4d51.5327584!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBD2FuaW1hbF9ob3NwaXRhbJoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VOcWFYQllXSFJSUlJBQuABAPoBBAgoEDA!16s%2Fg%2F11c5sm6v90?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "petwell-veterinary-center",
+    "name": "PetWell Veterinary Center",
+    "lat": 25.3956415,
+    "lng": 51.4336912,
+    "mapsUrl": "https://www.google.com/maps/place/PetWell+Veterinary+Center/@25.3956415,51.2295277,46827m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45dbce0640825b:0x7953a97ac39a5649!8m2!3d25.3956415!4d51.4336912!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBD2FuaW1hbF9ob3NwaXRhbJoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyMVNXR1JyTld4TmJVNUxWV3BPUlZKWFJqRmtSRXBIVkdzeFVsVkhZeEFC4AEA-gEECAAQNA!16s%2Fg%2F11xkq7pk2n?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "petwise-qatar-pet-grooming-home-service",
+    "name": "petwise qatar pet grooming. Home service",
+    "lat": 25.2854473,
+    "lng": 51.5310398,
+    "mapsUrl": "https://www.google.com/maps/place/petwise+qatar+pet+grooming.+Home+service/@25.4143717,51.0961145,93625m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45c5959e04747d:0x38021ccd1708e5c4!8m2!3d25.2854473!4d51.5310398!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBJENoZERTVWhOTUc5blMwVkpRMEZuVFVSM015MTZSSGxCUlJBQuABAPoBBAgAEEU!16s%2Fg%2F11s37r7cds?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "plan-b-cafe",
+    "name": "Plan B Cafe",
+    "lat": 25.3876461,
+    "lng": 51.5230262,
+    "mapsUrl": "https://www.google.com/maps/place/Plan+B+Cafe/@25.3763274,51.1358365,93531m/data=!3m1!1e3!4m10!1m2!2m1!1spet+friendly+cafe+doha!3m6!1s0x3e45c3a1227fa069:0x6ef6099713cd72e8!8m2!3d25.3876461!4d51.5230262!15sChZwZXQgZnJpZW5kbHkgY2FmZSBkb2hhWhgiFnBldCBmcmllbmRseSBjYWZlIGRvaGGSAQtjb2ZmZWVfc2hvcJoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VOMmRtRnBOakIzUlJBQuABAPoBBAgAEEg!16s%2Fg%2F11rn0z9bw5?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "privilege-pet-travel",
+    "name": "Privilege Pet Travel",
+    "lat": 25.2980141,
+    "lng": 51.4991971,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=25.2980141,51.4991971",
+    "hasPlaceUrl": false
+  },
+  {
+    "slug": "propets-qatar-mobile-pet-grooming",
+    "name": "ProPets Qatar Mobile Pet Grooming",
+    "lat": 25.3441055,
+    "lng": 51.584,
+    "mapsUrl": "https://www.google.com/maps/place/ProPets+Qatar+Mobile+Pet+Grooming/@25.3441055,51.1757388,93679m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x97d776b588fbc0f:0xde47eca837cc89dd!8m2!3d25.3441055!4d51.584!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VSd2JsbHBiMUpCRUFF4AEA-gEECAAQQw!16s%2Fg%2F11p_24g3l4?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "puregene-raw-food-healthy-treats-in-qatar",
+    "name": "Puregene – Raw Food & Healthy Treats in Qatar",
+    "lat": 25.3770625,
+    "lng": 51.5440625,
+    "mapsUrl": "https://www.google.com/maps/place/Puregene+%E2%80%93+Raw+Food+%26+Healthy+Treats+in+Qatar/@25.2985228,51.104216,93714m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45c331e1464c97:0xb12cab0dc8d9479b!8m2!3d25.3770625!4d51.5440625!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQlwZXRfc3RvcmWaAURDaTlEUVVsUlFVTnZaRU5vZEhsalJqbHZUMjVhVFdKR1dscGpVekZyVTJ4c1VrMHpUbmhXYlRGd1VtMTBjRk5yUlJBQuABAPoBBQjsAhA4!16s%2Fg%2F11xw6t3m3q?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "qatar-gov-vet",
+    "name": "QATAR GOV VET",
+    "lat": 25.2686332,
+    "lng": 51.4250374,
+    "mapsUrl": "https://www.google.com/maps/place/QATAR+GOV+VET/@25.2415557,51.2455794,46887m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45d960e3260da1:0x9cfb653477b3d750!8m2!3d25.2686332!4d51.4250374!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VRdE0xOVRUVEJuUlJBQuABAPoBBQigARBB!16s%2Fg%2F11j3x9068l?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "qatar-veterinary-center-duhail",
+    "name": "Qatar Veterinary Center Duhail",
+    "lat": 25.3570052,
+    "lng": 51.4734796,
+    "mapsUrl": "https://www.google.com/maps/place/Qatar+Veterinary+Center+Duhail/@25.335921,51.2637024,46850m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45dcf80d0fd017:0xf514076bbc85ee6a!8m2!3d25.3570052!4d51.4734796!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBD3ZldGVyaW5hcnlfY2FyZZoBI0NoWkRTVWhOTUc5blMwVkpRMEZuVFVSQmNYTlhXVXRCRUFF4AEA-gEFCOEBEEw!16s%2Fg%2F11r8ynv_s?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "qatar-veterinary-center",
+    "name": "Qatar Veterinary Center",
+    "lat": 25.2547614,
+    "lng": 51.44607,
+    "mapsUrl": "https://www.google.com/maps/place/Qatar+Veterinary+Center/@25.2547614,51.2419065,46882m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45da168878a5a1:0xfcb9b7e3e9d498ee!8m2!3d25.2547614!4d51.44607!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBD2FuaW1hbF9ob3NwaXRhbJoBJENoZERTVWhOTUc5blMwVkpRMEZuVFVSUmFrMVhZMjlSUlJBQuABAPoBBAhJEDE!16s%2Fg%2F11rr_nr87?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "qaws",
+    "name": "QAWS",
+    "lat": 25.1694863,
+    "lng": 51.1808459,
+    "mapsUrl": "https://www.google.com/maps/place/QAWS/@25.1694863,50.6040637,132538m/data=!3m1!1e3!4m10!1m2!2m1!1sanimal+rescue+qatar!3m6!1s0x3e46701dc1b62d95:0x7120ad739b4c352e!8m2!3d25.1694863!4d51.1808459!15sChNhbmltYWwgcmVzY3VlIHFhdGFyWhUiE2FuaW1hbCByZXNjdWUgcWF0YXKSAQ5hbmltYWxfc2hlbHRlcpoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VSWGNUUnBXREJSUlJBQuABAPoBBAgAECk!16s%2Fg%2F11g9w64gmq?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "radisson-blu-hotel-doha",
+    "name": "Radisson Blu Hotel Doha",
+    "lat": 25.2727849,
+    "lng": 51.5132293,
+    "mapsUrl": "https://www.google.com/maps/place/Radisson+Blu+Hotel+Doha/@25.2686312,51.2492813,66215m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45dab36ff1b0c1:0xb4793ec7fe005073!5m2!4m1!1i2!8m2!3d25.2727849!4d51.5132293!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11gzwgpj5?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "royal-heaven-hotel",
+    "name": "Royal heaven Hotel",
+    "lat": 25.2870879,
+    "lng": 51.5464168,
+    "mapsUrl": "https://www.google.com/maps/place/Royal+heaven+Hotel/@25.2761865,51.2247208,66211m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c5f8b9bb47e9:0x4ca463743970c61b!5m2!4m1!1i2!8m2!3d25.2870879!4d51.5464168!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11kr73_54p?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "royal-pet-place-vendome",
+    "name": "Royal Pet - Place Vendome",
+    "lat": 25.4052843,
+    "lng": 51.5207823,
+    "mapsUrl": "https://www.google.com/maps/place/Royal+Pet+-+Place+Vendome/@25.4143717,51.0961145,93625m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45c3e01e9f1b99:0x4099faf9f457711e!8m2!3d25.4052843!4d51.5207823!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSARBwZXRfc3VwcGx5X3N0b3JlmgEkQ2hkRFNVaE5NRzluUzBWSlEwRm5TVVF0TFRSNlluRm5SUkFC4AEA-gEECHMQOQ!16s%2Fg%2F11k3qs9vf1?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "royal-pet-villaggio-mall",
+    "name": "Royal Pet - Villaggio Mall",
+    "lat": 25.2590653,
+    "lng": 51.4410214,
+    "mapsUrl": "https://www.google.com/maps/place/Royal+Pet+-+Villaggio+Mall/@25.2590653,51.0330044,93689m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45dbc399468f69:0x503e0e8241525411!8m2!3d25.2590653!4d51.4410214!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEQcGV0X3N1cHBseV9zdG9yZZoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VObU5YRnFjbTVuUlJBQuABAPoBBAg7EDo!16s%2Fg%2F11ks2xsv0g?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "royal-vet-clinic",
+    "name": "Royal Vet Clinic",
+    "lat": 25.2535309,
+    "lng": 51.4363008,
+    "mapsUrl": "https://www.google.com/maps/place/Royal+Vet+Clinic/@25.2683464,51.2205321,46876m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45da18b37b4d73:0xd0a01c3ea7ea85c2!8m2!3d25.2535309!4d51.4363008!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyNVNVazR5VGpSVGJHUnNWak5TUTJSRlVrSlVWVFZvVFd0a2EyVkZSUkFC4AEA-gEECAAQRw!16s%2Fg%2F11cn9dvkw6?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "royal-veterinary-center",
+    "name": "Royal Veterinary Center",
+    "lat": 25.3616399,
+    "lng": 51.4466128,
+    "mapsUrl": "https://www.google.com/maps/place/Royal+Veterinary+Center/@25.335921,51.2637024,46850m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45ddcc164860ed:0x358d77b3c11c6179!8m2!3d25.3616399!4d51.4466128!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VSMk9IUTNSMXBSRUFF4AEA-gEECAAQSQ!16s%2Fg%2F11bxb9pryw?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "safir-hotel-doha",
+    "name": "Safir Hotel Doha",
+    "lat": 25.272607,
+    "lng": 51.5374901,
+    "mapsUrl": "https://www.google.com/maps/place/Safir+Hotel+Doha/@25.3626051,51.2548054,66164m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c5670b697711:0x8e01b1b7514191e7!5m2!4m1!1i2!8m2!3d25.272607!4d51.5374901!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F1vj5yppm?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "samwizers-dog-boarding",
+    "name": "Samwizer's Dog Boarding",
+    "lat": 25.2704093,
+    "lng": 51.52564,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=25.2704093,51.52564",
+    "hasPlaceUrl": false
+  },
+  {
+    "slug": "sanam-veterinary-clinic",
+    "name": "Sanam veterinary clinic",
+    "lat": 25.253286,
+    "lng": 51.5238725,
+    "mapsUrl": "https://www.google.com/maps/place/Sanam+veterinary+clinic/@25.2605897,51.3120607,46879m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45cf66779ad3cb:0xb7e21c43115b60a8!8m2!3d25.253286!4d51.5238725!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VSd2F6ZEVUR2hCUlJBQuABAPoBBAglEEc!16s%2Fg%2F11jdp0jtym?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "seka-pet-shop",
+    "name": "Seka Pet Shop",
+    "lat": 25.1700249,
+    "lng": 51.6082444,
+    "mapsUrl": "https://www.google.com/maps/place/Seka+Pet+Shop/@25.1700249,51.2002274,93757m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45cb72787ba7cd:0x3db7f0c8cb648940!8m2!3d25.1700249!4d51.6082444!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEQcGV0X3N1cHBseV9zdG9yZZoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VNM2MyVlhjRkZCRUFF4AEA-gEECAAQNA!16s%2Fg%2F11f660vprc?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "sofa-veterinary-care-center",
+    "name": "Sofa Veterinary Care Center",
+    "lat": 25.2540549,
+    "lng": 51.4903093,
+    "mapsUrl": "https://www.google.com/maps/place/Sofa+Veterinary+Care+Center/@25.2540549,51.2861458,46882m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45dbb1af706377:0xa4808f86bcc3f773!8m2!3d25.2540549!4d51.4903093!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VSMU9UZG1ZVWhuRUFF4AEA-gEECCgQSg!16s%2Fg%2F11fky3w4tk?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "souq-waqif-falcon-hospital",
+    "name": "Souq Waqif Falcon Hospital",
+    "lat": 25.2887697,
+    "lng": 51.5309772,
+    "mapsUrl": "https://www.google.com/maps/place/Souq+Waqif+Falcon+Hospital/@25.2887697,51.3268137,46869m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45c53bffd671a7:0xf5ead5452ea3edb!8m2!3d25.2887697!4d51.5309772!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuVFVSdmR6ZDZYMUYzRUFF4AEA-gEECAAQNg!16s%2Fg%2F12hpz99xz?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "staybridge-suites-doha-lusail-by-ihg",
+    "name": "Staybridge Suites Doha Lusail by IHG",
+    "lat": 25.38677,
+    "lng": 51.526107,
+    "mapsUrl": "https://www.google.com/maps/place/Staybridge+Suites+Doha+Lusail+by+IHG/@25.38677,51.2377159,66151m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c2db9f6c5063:0xa83329071f778196!5m2!4m1!1i2!8m2!3d25.38677!4d51.526107!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11f3hqlzc3?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "sweet-home-pet-sitter",
+    "name": "Sweet Home Pet Sitter",
+    "lat": 25.3054799,
+    "lng": 51.5119966,
+    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=25.3054799,51.5119966",
+    "hasPlaceUrl": false
+  },
+  {
+    "slug": "swissôtel-corniche-park-towers-doha",
+    "name": "Swissôtel Corniche Park Towers Doha",
+    "lat": 25.3157741,
+    "lng": 51.52424,
+    "mapsUrl": "https://www.google.com/maps/place/Swiss%C3%B4tel+Corniche+Park+Towers+Doha/@25.2708835,51.2503004,66214m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c5a403b41037:0xcfd4a9c34faa55d!5m2!4m1!1i2!8m2!3d25.3157741!4d51.52424!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11tx257bmq?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "tails-n-bites-qatar",
+    "name": "Tails N Bites Qatar",
+    "lat": 25.1581489,
+    "lng": 51.5176596,
+    "mapsUrl": "https://www.google.com/maps/place/Tails+N+Bites+Qatar/@25.2590653,51.0330044,93689m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45cd0563e4b1c5:0xd59971f2cc66f37d!8m2!3d25.1581489!4d51.5176596!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDJwbk1VMXRNVEpaYTJoWVZWZGtOR0pzUWxkYWF6RXdUa1ZzV0dKWVl4QULgAQD6AQUIoQEQSw!16s%2Fg%2F11ydv_868q?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "the-drawing-room-cafe",
+    "name": "The Drawing Room Cafe",
+    "lat": 25.3683614,
+    "lng": 51.5501814,
+    "mapsUrl": "https://www.google.com/maps/place/The+Drawing+Room+Cafe/@25.3763274,51.1358365,93531m/data=!3m1!1e3!4m11!1m2!2m1!1spet+friendly+cafe+doha!3m7!1s0x3e45c3733c04dfe5:0x64c7625bdc251bcc!8m2!3d25.3683614!4d51.5501814!10e2!15sChZwZXQgZnJpZW5kbHkgY2FmZSBkb2hhWhgiFnBldCBmcmllbmRseSBjYWZlIGRvaGGSAQRjYWZlmgEjQ2haRFNVaE5NRzluUzBWSlEwRm5TVU01ZFV0aU1HVlJFQUXgAQD6AQQIABAh!16s%2Fg%2F11dyb9whjw?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "the-grooming-station",
+    "name": "The grooming station",
+    "lat": 25.3387722,
+    "lng": 51.4946018,
+    "mapsUrl": "https://www.google.com/maps/place/The+grooming+station/@25.2985228,51.104216,93714m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45d13dc7ea3101:0xc39b118acc4fc765!8m2!3d25.3387722!4d51.4946018!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VSZk5EWmhhamQzUlJBQuABAPoBBAgAED4!16s%2Fg%2F11v4s_12g3?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "the-oat-house",
+    "name": "The Oat House",
+    "lat": 25.2744699,
+    "lng": 51.5096046,
+    "mapsUrl": "https://www.google.com/maps/place/The+Oat+House/@25.3763274,51.1358365,93531m/data=!3m1!1e3!4m10!1m2!2m1!1spet+friendly+cafe+doha!3m6!1s0x3e45db51aa418707:0xd73eab36e1fa9d8b!8m2!3d25.2744699!4d51.5096046!15sChZwZXQgZnJpZW5kbHkgY2FmZSBkb2hhWhgiFnBldCBmcmllbmRseSBjYWZlIGRvaGGSAQpyZXN0YXVyYW50mgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDJ4YWRFOUZOVEpOUlZvelltNWFURTlZVm0xVlZ6VnBUbFpHYTJKclJSQULgAQD6AQQIMxAt!16s%2Fg%2F11kqwlg83p?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "the-vet-experts-al-furousiya-الخبراء-البيطريين-الريان-الفروس",
+    "name": "The Vet Experts - Al Furousiya | الخبراء البيطريين - الريان الفروسية",
+    "lat": 25.262474,
+    "lng": 51.4303283,
+    "mapsUrl": "https://www.google.com/maps/place/The+Vet+Experts+-+Al+Furousiya+%7C+%D8%A7%D9%84%D8%AE%D8%A8%D8%B1%D8%A7%D8%A1+%D8%A7%D9%84%D8%A8%D9%8A%D8%B7%D8%B1%D9%8A%D9%8A%D9%86+-+%D8%A7%D9%84%D8%B1%D9%8A%D8%A7%D9%86+%D8%A7%D9%84%D9%81%D8%B1%D9%88%D8%B3%D9%8A%D8%A9%E2%80%AD/@25.262474,51.2261648,46879m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45d9febf1c66a3:0x63c7e33e2f7fe01b!8m2!3d25.262474!4d51.4303283!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBE3ZldGVyaW5hcnlfcGhhcm1hY3maASNDaFpEU1VoTk1HOW5TMFZKUTBGblNVUlhjVGwyTm1WbkVBReABAPoBBAgAEBM!16s%2Fg%2F11fjs7qly_?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "the-veterinary-surgery-dohavets",
+    "name": "The Veterinary Surgery-Dohavets",
+    "lat": 25.2890502,
+    "lng": 51.5118872,
+    "mapsUrl": "https://www.google.com/maps/place/The+Veterinary+Surgery-Dohavets/@25.2890502,51.3077237,46868m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45dad25ced8b1d:0x63940abcbecab0c2!8m2!3d25.2890502!4d51.5118872!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyeGFUR013VVhSVFJtaENaVVJrYldWSFZuWlNibGt3V1ZSV1ExSldSUkFC4AEA-gEFCO8CEC8!16s%2Fg%2F1tdncqs1?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "the-westin-doha-hotel-spa",
+    "name": "The Westin Doha Hotel & Spa",
+    "lat": 25.2761865,
+    "lng": 51.5131119,
+    "mapsUrl": "https://www.google.com/maps/place/The+Westin+Doha+Hotel+%26+Spa/@25.272607,51.249099,66213m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45dab4db4fd9db:0x37f075e4484f4702!5m2!4m1!1i2!8m2!3d25.2761865!4d51.5131119!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBDHJlc29ydF9ob3RlbKoBYgoIL20vMDY4aHkQASoWIhJwZXQgZnJpZW5kbHkgaG90ZWwoADIfEAEiG7PS1aJq6pJLnviyVK2rzB-TVJcN4oR3qsm4nDIbEAIiF3BldCBmcmllbmRseSBob3RlbCBkb2hh4AEA!16s%2Fg%2F11b7y9mlg9?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "three-six-nine-pet-care-supplies",
+    "name": "Three Six Nine Pet Care Supplies",
+    "lat": 25.2519375,
+    "lng": 51.4534375,
+    "mapsUrl": "https://www.google.com/maps/place/Three+Six+Nine+Pet+Care+Supplies/@25.2519375,51.0451763,93750m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45db000487e4f9:0x43cf7f64e35bf10e!8m2!3d25.2519375!4d51.4534375!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSARBwZXRfc3VwcGx5X3N0b3JlmgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDJ4S05WVnFSbVpXTUVwclZUSldSR05yVW1sVVZFSjJUbXBaTkZvd1JSQULgAQD6AQQIABAr!16s%2Fg%2F11ygh5mjyx?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "tourist-hotel",
+    "name": "Tourist Hotel",
+    "lat": 25.2875899,
+    "lng": 51.5467458,
+    "mapsUrl": "https://www.google.com/maps/place/Tourist+Hotel/@25.2875899,51.2583547,66205m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c572aab50153:0xd6515faf1bd7240a!5m2!4m1!1i2!8m2!3d25.2875899!4d51.5467458!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11btv65824?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "umm-salal-central-market",
+    "name": "umm salal central market",
+    "lat": 25.4349051,
+    "lng": 51.393313,
+    "mapsUrl": "https://www.google.com/maps/place/umm+salal+central+market/@25.4349051,50.985296,93553m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45e1002b674abd:0x1cc313ad4b98beda!8m2!3d25.4349051!4d51.393313!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDIxME0xSlZOWGhrTUZKVlYwUmFiRTFXVVRGVVJFbzFUVEkxV2xSSFl4QULgAQD6AQQIABAh!16s%2Fg%2F11yb1j5mqd?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "umm-salal-veterinarian-centerمركز-ام-صلال-البيطري",
+    "name": "Umm Salal Veterinarian Centerمركز ام صلال البيطري",
+    "lat": 25.4347303,
+    "lng": 51.3832718,
+    "mapsUrl": "https://www.google.com/maps/place/Umm+Salal+Veterinarian+Center%D9%85%D8%B1%D9%83%D8%B2+%D8%A7%D9%85+%D8%B5%D9%84%D8%A7%D9%84+%D8%A7%D9%84%D8%A8%D9%8A%D8%B7%D8%B1%D9%8A%E2%80%AD/@25.4347303,51.1791083,46812m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45e12161b2ef27:0x61ad8266e9d22228!8m2!3d25.4347303!4d51.3832718!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBCGhvc3BpdGFs4AEA!16s%2Fg%2F11gsn3th5m?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "utika-cafe",
+    "name": "UTIKA CAFE",
+    "lat": 25.3876578,
+    "lng": 51.5231571,
+    "mapsUrl": "https://www.google.com/maps/place/UTIKA+CAFE/@25.3763274,51.1358365,93531m/data=!3m1!1e3!4m10!1m2!2m1!1spet+friendly+cafe+doha!3m6!1s0x3e45c323b63e690d:0xb8bcdb0dadca1571!8m2!3d25.3876578!4d51.5231571!15sChZwZXQgZnJpZW5kbHkgY2FmZSBkb2hhWhgiFnBldCBmcmllbmRseSBjYWZlIGRvaGGSAQpyZXN0YXVyYW50mgEkQ2hkRFNVaE5NRzluUzBWSlEwRm5TVU5NT0hKUU9YbG5SUkFC4AEA-gEECAAQDQ!16s%2Fg%2F11tggmn372?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "v-i-pet-veterinary-clinic",
+    "name": "V I Pet Veterinary Clinic",
+    "lat": 25.3381682,
+    "lng": 51.4731562,
+    "mapsUrl": "https://www.google.com/maps/place/V+I+Pet+Veterinary+Clinic/@25.3719053,51.2364551,46836m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45dd0024e35531:0xabd1cc5b9647d1d9!8m2!3d25.3381682!4d51.4731562!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyeFplV1JzWkVsaE0yUTFXbFpHVVZGcmFEVlZXRnBGVkZaT1dtVnJSUkFC4AEA-gEECD8QSA!16s%2Fg%2F11xfkb854n?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "vee-paws-for-pets-care",
+    "name": "Vee Paws for Pets Care",
+    "lat": 25.2061615,
+    "lng": 51.506373,
+    "mapsUrl": "https://www.google.com/maps/place/Vee+Paws+for+Pets+Care/@25.2985228,51.104216,93714m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45d164684224fb:0x51fb02a3a4bac10b!8m2!3d25.2061615!4d51.506373!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VRNWRYQlFkVEZSUlJBQuABAPoBBAgAEEs!16s%2Fg%2F11vbbl553_?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "vet-point-qatar-veterinary-care-center",
+    "name": "Vet Point Qatar - Veterinary Care Center",
+    "lat": 25.2553945,
+    "lng": 51.4412806,
+    "mapsUrl": "https://www.google.com/maps/place/Vet+Point+Qatar+-+Veterinary+Care+Center/@25.2553945,51.2371171,46881m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45c5fde19e1a7d:0xcf21fd20a49c640a!8m2!3d25.2553945!4d51.4412806!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VSdWRWbElhME4zRUFF4AEA-gEECAAQSg!16s%2Fg%2F11vpwmltkx?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "vet-zone-veterinary-pharmacy",
+    "name": "Vet Zone Veterinary Pharmacy",
+    "lat": 25.2630036,
+    "lng": 51.4302638,
+    "mapsUrl": "https://www.google.com/maps/place/Vet+Zone+Veterinary+Pharmacy/@25.2611074,51.2507584,46879m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45db0704eaf99f:0xa8731d108035eaa8!8m2!3d25.2630036!4d51.4302638!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBE3ZldGVyaW5hcnlfcGhhcm1hY3maASRDaGREU1VoTk1HOW5TMFZKUTBGblNVUTFhMHhxYUhGM1JSQULgAQD6AQQIABAa!16s%2Fg%2F11vkj8sz0p?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "vets-4-pets-veterinary-clinic-qatar",
+    "name": "Vets 4 Pets Veterinary Clinic Qatar",
+    "lat": 25.2538255,
+    "lng": 51.4465645,
+    "mapsUrl": "https://www.google.com/maps/place/Vets+4+Pets+Veterinary+Clinic+Qatar/@25.335921,51.2637024,46850m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45da1420a65459:0x697b9a063bc5f2db!8m2!3d25.2538255!4d51.4465645!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBRENpOURRVWxSUVVOdlpFTm9kSGxqUmpsdlQyMU9TMlI2UVhoVFJsWkVVekpzVEdWR1VuVlViWGN6WlcxYVJrNHdSUkFC4AEA-gEECGMQSQ!16s%2Fg%2F11dylylx6l?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "vip-hotel",
+    "name": "VIP Hotel",
+    "lat": 25.2743304,
+    "lng": 51.5518759,
+    "mapsUrl": "https://www.google.com/maps/place/VIP+Hotel/@25.2745896,51.2220606,66212m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c5c0813786e9:0x1c41a01185f0f19c!5m2!4m1!1i2!8m2!3d25.2743304!4d51.5518759!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11h2634_zh?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "w-doha",
+    "name": "W Doha",
+    "lat": 25.3288845,
+    "lng": 51.5303094,
+    "mapsUrl": "https://www.google.com/maps/place/W+Doha/@25.38677,51.2377159,66151m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c4bbe5a7f0db:0x2f3deedf5f5a11f6!5m2!4m1!1i2!8m2!3d25.3288845!4d51.5303094!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11r9cqcs5?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "waldorf-astoria-doha-west-bay",
+    "name": "Waldorf Astoria Doha West Bay",
+    "lat": 25.3276521,
+    "lng": 51.5332242,
+    "mapsUrl": "https://www.google.com/maps/place/Waldorf+Astoria+Doha+West+Bay/@25.3764086,51.2351607,66156m/data=!3m1!1e3!4m16!1m5!2m4!1spet+friendly+hotel+doha!5m1!13e8!6e3!3m9!1s0x3e45c4befc1b2325:0x628f7537952c1b1!5m2!4m1!1i2!8m2!3d25.3276521!4d51.5332242!15sChdwZXQgZnJpZW5kbHkgaG90ZWwgZG9oYZIBBWhvdGVsqgFiCggvbS8wNjhoeRABKhYiEnBldCBmcmllbmRseSBob3RlbCgAMh8QASIbs9LVomrqkkue-LJUravMH5NUlw3ihHeqybicMhsQAiIXcGV0IGZyaWVuZGx5IGhvdGVsIGRvaGHgAQA!16s%2Fg%2F11hbg8h5br?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "woofy-pets-world-trading",
+    "name": "Woofy Pets World Trading",
+    "lat": 25.4033125,
+    "lng": 51.4350625,
+    "mapsUrl": "https://www.google.com/maps/place/Woofy+Pets+World+Trading/@25.4033125,51.0268013,93633m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45cf004c4ae467:0xdc3e315e89104c1c!8m2!3d25.4033125!4d51.4350625!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQlwZXRfc3RvcmWaAURDaTlEUVVsUlFVTnZaRU5vZEhsalJqbHZUMnN3ZUUxNmJFdGtXRTVxWWxaR2RFeFZPSHBYU0dONVZHeEtiRk5WUlJBQuABAPoBBAgAEB0!16s%2Fg%2F11wvylg_gb?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "world-of-birds-pet-aquatic-pet-store-عالم-الطيور",
+    "name": "World Of Birds - Pet & Aquatic pet store - عالم الطيور",
+    "lat": 25.319215,
+    "lng": 51.4695807,
+    "mapsUrl": "https://www.google.com/maps/place/World+Of+Birds+-+Pet+%26+Aquatic+pet+store+-+%D8%B9%D8%A7%D9%84%D9%85+%D8%A7%D9%84%D8%B7%D9%8A%D9%88%D8%B1%E2%80%AD/@25.3939375,51.0200455,93585m/data=!3m1!1e3!4m12!1m3!2m2!1spet+shops!6e6!3m7!1s0x3e45db83da82f1d9:0xe577f7809a08e292!8m2!3d25.319215!4d51.4695807!10e2!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgFEQ2k5RFFVbFJRVU52WkVOb2RIbGpSamx2VDI1V2JsTlVXbGhhVkUwMVVURmFlbVJVWkdaWFJGWjJZM3BPYUU0d1JSQULgAQD6AQUIwwEQSg!16s%2Fg%2F11dxhyz4_4?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "wowpaw-qatar",
+    "name": "WowPaw Qatar",
+    "lat": 25.3138974,
+    "lng": 51.5212585,
+    "mapsUrl": "https://www.google.com/maps/place/WowPaw+Qatar/@25.4143717,51.0961145,93625m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45e71c8f659e9b:0xfc230344f635afa9!8m2!3d25.3138974!4d51.5212585!15sCg1wZXRzIGdyb29taW5nWg8iDXBldHMgZ3Jvb21pbmeSAQtwZXRfZ3Jvb21lcpoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VRMU9IWTJlV3gzUlJBQuABAPoBBAgAEDk!16s%2Fg%2F11pzvz2htq?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "zoo-animals",
+    "name": "Zoo Animals",
+    "lat": 25.255576,
+    "lng": 51.5625494,
+    "mapsUrl": "https://www.google.com/maps/place/Zoo+Animals/@25.255576,51.1545324,93692m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45cfb839be7969:0xa6e923afa2754b62!8m2!3d25.255576!4d51.5625494!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgEjQ2haRFNVaE5NRzluUzBWSlEwRm5TVU5QZVZBemRsWlJFQUXgAQD6AQQIKBBL!16s%2Fg%2F11k_59xz9g?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "البحيرة-للطيور-واسماك-الزينة",
+    "name": "البحيرة للطيور واسماك الزينة",
+    "lat": 25.2733931,
+    "lng": 51.4983991,
+    "mapsUrl": "https://www.google.com/maps/place/%D8%A7%D9%84%D8%A8%D8%AD%D9%8A%D8%B1%D8%A9+%D9%84%D9%84%D8%B7%D9%8A%D9%88%D8%B1+%D9%88%D8%A7%D8%B3%D9%85%D8%A7%D9%83+%D8%A7%D9%84%D8%B2%D9%8A%D9%86%D8%A9%E2%80%AD/@25.3149759,51.0723786,93646m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45dbc7d751e3f1:0x26b13aa2be409153!8m2!3d25.2733931!4d51.4983991!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgEkQ2hkRFNVaE5NRzluUzBWSlEwRm5TVU0xTmxsNU9EWlJSUkFC4AEA-gEECAAQEA!16s%2Fg%2F11p0w45j8l?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "دار-الحيوان-dar-animal-pet-shop",
+    "name": "دار الحيوان DAR ANIMAL PET SHOP",
+    "lat": 25.336349,
+    "lng": 51.4744259,
+    "mapsUrl": "https://www.google.com/maps/place/%D8%AF%D8%A7%D8%B1+%D8%A7%D9%84%D8%AD%D9%8A%D9%88%D8%A7%D9%86+DAR+ANIMAL+PET+SHOP%E2%80%AD/@25.2942115,51.0118247,93718m/data=!3m1!1e3!4m10!1m2!2m1!1spets+grooming!3m6!1s0x3e45dd00544fc8af:0x3e4767045cec2052!8m2!3d25.336349!4d51.4744259!15sCg1wZXRzIGdyb29taW5nkgEJcGV0X3N0b3Jl4AEA!16s%2Fg%2F11yzl1yw49?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "صيدلية-الجزيرة-البيطرية-al-jazeera-veterinary-rayan-branch",
+    "name": "صيدلية الجزيرة البيطرية Al Jazeera Veterinary rayan branch",
+    "lat": 25.2581596,
+    "lng": 51.4303398,
+    "mapsUrl": "https://www.google.com/maps/place/%D8%B5%D9%8A%D8%AF%D9%84%D9%8A%D8%A9+%D8%A7%D9%84%D8%AC%D8%B2%D9%8A%D8%B1%D8%A9+%D8%A7%D9%84%D8%A8%D9%8A%D8%B7%D8%B1%D9%8A%D8%A9+Al+Jazeera+Veterinary+rayan+branch%E2%80%AD/@25.2581596,51.2261763,46880m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45d989ee3db40f:0x4c823625a8de8ab9!8m2!3d25.2581596!4d51.4303398!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBE3ZldGVyaW5hcnlfcGhhcm1hY3maASNDaFpEU1VoTk1HOW5TMFZKUTBGblNVTmZPVTh6ZGtSM0VBReABAPoBBAgAEDo!16s%2Fg%2F11ggnbbv4k?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "صيدلية-سنام-البيطرية-sanam-veterinary-pharmacy",
+    "name": "صيدلية سنام البيطرية Sanam veterinary pharmacy",
+    "lat": 25.3941441,
+    "lng": 51.2254389,
+    "mapsUrl": "https://www.google.com/maps/place/%D8%B5%D9%8A%D8%AF%D9%84%D9%8A%D8%A9+%D8%B3%D9%86%D8%A7%D9%85+%D8%A7%D9%84%D8%A8%D9%8A%D8%B7%D8%B1%D9%8A%D8%A9+Sanam+veterinary+pharmacy%E2%80%AD/@25.3941441,51.0212754,46828m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e460d209c551eff:0xdcaae51623924311!8m2!3d25.3941441!4d51.2254389!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBE3ZldGVyaW5hcnlfcGhhcm1hY3maASNDaFpEU1VoTk1HOW5TMFZKUTBGblNVTndhR0psZVZWUkVBReABAPoBBAgAECw!16s%2Fg%2F11kpmbt5x6?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "عيادة-فارس-التميمي-البيطري",
+    "name": "عيادة فارس التميمي البيطري",
+    "lat": 25.3623166,
+    "lng": 51.5266696,
+    "mapsUrl": "https://www.google.com/maps/place/%D8%B9%D9%8A%D8%A7%D8%AF%D8%A9+%D9%81%D8%A7%D8%B1%D8%B3+%D8%A7%D9%84%D8%AA%D9%85%D9%8A%D9%85%D9%8A+%D8%A7%D9%84%D8%A8%D9%8A%D8%B7%D8%B1%D9%8A%E2%80%AD/@25.2540549,51.2861458,46882m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45c319dcf95edd:0x28731c02b78e3d84!8m2!3d25.3623166!4d51.5266696!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbuABAA!16s%2Fg%2F11p5tl0mgx?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "عيادة-للصقور",
+    "name": "عيادة للصقور",
+    "lat": 25.3240289,
+    "lng": 51.4666869,
+    "mapsUrl": "https://www.google.com/maps/place/%D8%B9%D9%8A%D8%A7%D8%AF%D8%A9+%D9%84%D9%84%D8%B5%D9%82%D9%88%D8%B1%E2%80%AD/@25.3240289,51.2625234,46855m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45ddbebb47422f:0x66b02fc58ca909c0!8m2!3d25.3240289!4d51.4666869!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBD2FuaW1hbF9ob3NwaXRhbOABAA!16s%2Fg%2F11s8wc68j6?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "عياده-اوركس-للصقور-oryx-falcon-veterinarian",
+    "name": "عياده اوركس للصقور (Oryx Falcon Veterinarian)",
+    "lat": 25.2415557,
+    "lng": 51.4497429,
+    "mapsUrl": "https://www.google.com/maps/place/%D8%B9%D9%8A%D8%A7%D8%AF%D9%87+%D8%A7%D9%88%D8%B1%D9%83%D8%B3+%D9%84%D9%84%D8%B5%D9%82%D9%88%D8%B1+(Oryx+Falcon+Veterinarian)%E2%80%AD/@25.2415557,51.2455794,46887m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45db20dcfa9c8b:0x7508b35ac47522d5!8m2!3d25.2415557!4d51.4497429!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBDHZldGVyaW5hcmlhbpoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VSZmIwOTViVGQzUlJBQuABAPoBBAgAEDI!16s%2Fg%2F11rzdg4w9z?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "مركز-عفرين-للصقورafreen-falcon-center",
+    "name": "مركز عفرين للصقور/Afreen Falcon Center",
+    "lat": 25.2471125,
+    "lng": 51.4212969,
+    "mapsUrl": "https://www.google.com/maps/place/%D9%85%D8%B1%D9%83%D8%B2+%D8%B9%D9%81%D8%B1%D9%8A%D9%86+%D9%84%D9%84%D8%B5%D9%82%D9%88%D8%B1%2FAfreen+Falcon+Center%E2%80%AD/@25.2471125,51.2171334,46885m/data=!3m1!1e3!4m10!1m2!2m1!1sveterinary+clinic+qatar!3m6!1s0x3e45d951a387c571:0x44710a76af0eac1f!8m2!3d25.2471125!4d51.4212969!15sChd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcloZIhd2ZXRlcmluYXJ5IGNsaW5pYyBxYXRhcpIBCGhvc3BpdGFsmgEjQ2haRFNVaE5NRzluUzBWSlEwRm5TVU5mTFRsZk0wUkJFQUXgAQD6AQQIABAQ!16s%2Fg%2F11t9tq8kq0?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "مزرعة-علي-الجاسم-ali-al-jassim-farm",
+    "name": "مزرعة علي الجاسم Ali Al-jassim Farm",
+    "lat": 25.8222843,
+    "lng": 51.4050405,
+    "mapsUrl": "https://www.google.com/maps/place/%D9%85%D8%B2%D8%B1%D8%B9%D8%A9+%D8%B9%D9%84%D9%8A+%D8%A7%D9%84%D8%AC%D8%A7%D8%B3%D9%85+Ali+Al-jassim+Farm%E2%80%AD/@25.8222843,50.8282583,131820m/data=!3m1!1e3!4m10!1m2!2m1!1sanimal+rescue+qatar!3m6!1s0x3e4f539305a25c17:0x62191085855a9bc0!8m2!3d25.8222843!4d51.4050405!15sChNhbmltYWwgcmVzY3VlIHFhdGFykgEOYW5pbWFsX3NoZWx0ZXLgAQA!16s%2Fg%2F11p14f1d9h?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  },
+  {
+    "slug": "مملكة-الطيور-سوق-العلي-kingdom-of-birds",
+    "name": "مملكة الطيور سوق العلي Kingdom Of Birds",
+    "lat": 25.3199203,
+    "lng": 51.4684977,
+    "mapsUrl": "https://www.google.com/maps/place/%D9%85%D9%85%D9%84%D9%83%D8%A9+%D8%A7%D9%84%D8%B7%D9%8A%D9%88%D8%B1+%D8%B3%D9%88%D9%82+%D8%A7%D9%84%D8%B9%D9%84%D9%8A+Kingdom+Of+Birds%E2%80%AD/@25.2592112,51.0448278,93689m/data=!3m1!1e3!4m11!1m3!2m2!1spet+shops!6e6!3m6!1s0x3e45db02c50b310d:0x26644e7ca268bbe4!8m2!3d25.3199203!4d51.4684977!15sCglwZXQgc2hvcHNaCyIJcGV0IHNob3BzkgEJcGV0X3N0b3JlmgEkQ2hkRFNVaE5NRzluUzBWSlEwRm5TVVEzYmxCSE0zTlJSUkFC4AEA-gEECAAQQA!16s%2Fg%2F11gtz67q4g?entry=ttu&g_ep=EgoyMDI2MDMxMS4wIKXMDSoASAFQAw%3D%3D",
+    "hasPlaceUrl": true
+  }
+];
+
+  // ---- tunables -------------------------------------------------------- //
+  const PER_BIZ_TIMEOUT_MS = 25000;   // give up waiting for a photo after this
+  const POLL_MS            = 750;
+  const MIN_DIM            = 200;
+  const POST_DOWNLOAD_MS   = 1500;    // pause after save before navigating
+  const NAV_DELAY_MS       = 4000;    // pause between businesses (be polite)
+
+  // ---- state keys ------------------------------------------------------ //
+  const K_RUNNING       = 'qpaws_running';
+  const K_INDEX         = 'qpaws_index';
+  const K_RESULTS       = 'qpaws_results';
+  const K_NAV_ATTEMPTS  = 'qpaws_nav_attempts';   // for current index
+  const K_NAV_INDEX     = 'qpaws_nav_index';      // index the attempts apply to
+  const K_SKIP_REQ      = 'qpaws_skip_request';
+  const MAX_NAV_ATTEMPTS = 2;
+
+  // ---- main ------------------------------------------------------------ //
+  if (window.__QPAWS_RAN__) return;
+  window.__QPAWS_RAN__ = true;
+
+  const running = GM_getValue(K_RUNNING, false);
+
+  // Always render the control panel so user can start / resume / stop.
+  renderPanel();
+
+  if (!running) return;
+
+  const idx = GM_getValue(K_INDEX, 0);
+  if (idx >= BUSINESSES.length) {
+    finishJob();
+    return;
+  }
+
+  const cur = BUSINESSES[idx];
+  updateStatus('Business ' + (idx + 1) + ' / ' + BUSINESSES.length +
+               ': ' + cur.slug);
+
+  // Honor a manual skip request.
+  if (GM_getValue(K_SKIP_REQ, false)) {
+    GM_deleteValue(K_SKIP_REQ);
+    recordResult(idx, cur, false, null, 'manually skipped');
+    advance(idx);
+    return;
+  }
+
+  // Auto-skip businesses without a real place URL (service-only, no Maps page).
+  if (!cur.hasPlaceUrl) {
+    recordResult(idx, cur, false, null, 'no place URL — service business');
+    advance(idx);
+    return;
+  }
+
+  // If we're not on the right place page yet, navigate there — but bound the
+  // number of attempts so a bad URL can't infinite-loop the queue.
+  if (!locationMatches(cur)) {
+    let attempts = (GM_getValue(K_NAV_INDEX, -1) === idx)
+      ? GM_getValue(K_NAV_ATTEMPTS, 0)
+      : 0;
+    if (attempts >= MAX_NAV_ATTEMPTS) {
+      recordResult(idx, cur, false, null,
+        'navigation never landed on a place page after ' +
+        MAX_NAV_ATTEMPTS + ' attempts');
+      GM_deleteValue(K_NAV_ATTEMPTS);
+      GM_deleteValue(K_NAV_INDEX);
+      advance(idx);
+      return;
+    }
+    GM_setValue(K_NAV_INDEX, idx);
+    GM_setValue(K_NAV_ATTEMPTS, attempts + 1);
+    updateStatus('Navigating to ' + cur.slug +
+                 ' (attempt ' + (attempts + 1) + '/' + MAX_NAV_ATTEMPTS + ') ...');
+    setTimeout(() => { location.href = cur.mapsUrl; }, 500);
+    return;
+  }
+
+  // Got to the right page — clear nav-attempt tracking, do the work.
+  GM_deleteValue(K_NAV_ATTEMPTS);
+  GM_deleteValue(K_NAV_INDEX);
+  processCurrent(cur, idx);
+
+  // ---- core flow ------------------------------------------------------- //
+
+  function processCurrent(biz, idx) {
+    const t0 = Date.now();
+    const poll = setInterval(() => {
+      const pick = findHeroPhotoUrl();
+      if (pick) {
+        clearInterval(poll);
+        download(biz, pick, idx);
+      } else if (Date.now() - t0 > PER_BIZ_TIMEOUT_MS) {
+        clearInterval(poll);
+        recordResult(idx, biz, false, null, 'no large photo found in DOM');
+        advance(idx);
+      }
+    }, POLL_MS);
+  }
+
+  function download(biz, picked, idx) {
+    const ext = guessExt(picked.url);
+    const filename = biz.slug + '.' + ext;
+    updateStatus('Downloading ' + filename + ' (' + picked.w + 'x' +
+                 picked.h + ', ' + picked.source + ') ...');
+
+    GM_download({
+      url: picked.url,
+      name: filename,
+      saveAs: false,
+      onload: () => {
+        recordResult(idx, biz, true, filename, null, picked);
+        setTimeout(() => advance(idx), POST_DOWNLOAD_MS);
+      },
+      onerror: (e) => {
+        // Fallback: GM_xmlhttpRequest -> blob -> <a download>
+        xhrFallback(biz, picked, idx, filename);
+      },
+      ontimeout: () => {
+        recordResult(idx, biz, false, null, 'GM_download timeout');
+        advance(idx);
+      },
+    });
+  }
+
+  function xhrFallback(biz, picked, idx, filename) {
+    GM_xmlhttpRequest({
+      method: 'GET',
+      url: picked.url,
+      responseType: 'blob',
+      onload: (r) => {
+        if (r.status !== 200) {
+          recordResult(idx, biz, false, null, 'XHR HTTP ' + r.status);
+          advance(idx);
+          return;
+        }
+        const blobUrl = URL.createObjectURL(r.response);
+        const a = document.createElement('a');
+        a.href = blobUrl; a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(blobUrl); a.remove(); }, 1000);
+        recordResult(idx, biz, true, filename, 'xhr-fallback', picked);
+        setTimeout(() => advance(idx), POST_DOWNLOAD_MS);
+      },
+      onerror: () => {
+        recordResult(idx, biz, false, null, 'XHR failed');
+        advance(idx);
+      },
+    });
+  }
+
+  function advance(idx) {
+    const next = idx + 1;
+    GM_setValue(K_INDEX, next);
+    if (next >= BUSINESSES.length) {
+      finishJob();
+      return;
+    }
+    setTimeout(() => { location.href = BUSINESSES[next].mapsUrl; },
+               NAV_DELAY_MS);
+  }
+
+  function finishJob() {
+    const results = GM_getValue(K_RESULTS, []);
+    const ok   = results.filter(r => r.ok).length;
+    const fail = results.length - ok;
+    updateStatus('DONE — ' + ok + ' ok, ' + fail + ' failed. Saving manifest...');
+    const blob = new Blob(
+      [JSON.stringify(results, null, 2)],
+      { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'image_rescue_manifest.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => a.remove(), 1500);
+    GM_setValue(K_RUNNING, false);
+    updateStatus('DONE — ' + ok + ' / ' + results.length +
+                 ' downloaded. Manifest saved.');
+  }
+
+  function recordResult(idx, biz, ok, filename, err, picked) {
+    const results = GM_getValue(K_RESULTS, []);
+    results[idx] = {
+      idx, slug: biz.slug, name: biz.name, ok,
+      filename: filename || null,
+      url: picked ? picked.url : null,
+      width: picked ? picked.w : null,
+      height: picked ? picked.h : null,
+      source: picked ? picked.source : null,
+      error: err || null,
+    };
+    GM_setValue(K_RESULTS, results);
+  }
+
+  // ---- DOM detection --------------------------------------------------- //
+
+  function urlSize(u) {
+    const m = u.match(/=w(\d+)-h(\d+)/);
+    if (!m) return { w: 0, h: 0 };
+    return { w: +m[1], h: +m[2] };
+  }
+
+  function findHeroPhotoUrl() {
+    const cands = [];
+    for (const img of document.querySelectorAll('img')) {
+      const src = img.currentSrc || img.src || '';
+      if (!/lh[345]\.googleusercontent\.com/.test(src)) continue;
+      const w = img.naturalWidth || 0;
+      const h = img.naturalHeight || 0;
+      if (w < MIN_DIM || h < MIN_DIM) continue;
+      cands.push({ url: src, w, h, area: w * h, source: 'img' });
+    }
+    for (const el of document.querySelectorAll('[style*="background-image"]')) {
+      const m = (el.getAttribute('style') || '').match(
+        /background-image:\s*url\(["']?(https:\/\/lh[345]\.googleusercontent\.com\/[^"' )]+)/);
+      if (!m) continue;
+      const sz = urlSize(m[1]);
+      if (sz.w < MIN_DIM || sz.h < MIN_DIM) continue;
+      cands.push({ url: m[1], w: sz.w, h: sz.h, area: sz.w * sz.h, source: 'bg' });
+    }
+    if (!cands.length) return null;
+    cands.sort((a, b) => b.area - a.area);
+    return cands[0];
+  }
+
+  function guessExt(url) {
+    if (/\.png/i.test(url)) return 'png';
+    if (/\.webp/i.test(url)) return 'webp';
+    return 'jpg';
+  }
+
+  function locationMatches(biz) {
+    // Must be on a /maps/place/... URL (not /maps/search/, /maps/dir/, etc.)
+    if (!location.pathname.includes('/place/')) return false;
+    // Even a loose slug overlap is acceptable — Maps may rewrite the slug
+    // (e.g. capitalization, transliteration). If pathname has /place/ at all
+    // after we navigated to this biz, treat it as "good enough" and let the
+    // photo detector run. Better to attempt and fail at photo-find than loop.
+    return true;
+  }
+
+  // ---- floating control panel ----------------------------------------- //
+
+  function renderPanel() {
+    if (document.getElementById('qpaws-panel')) return;
+    const css = `
+      #qpaws-panel { position:fixed; top:12px; right:12px; z-index:2147483647;
+        background:#141210; color:#F6F1E8; padding:12px 14px; border-radius:8px;
+        font:13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;
+        min-width:280px; max-width:340px; box-shadow:0 6px 24px rgba(0,0,0,0.4); }
+      #qpaws-panel h4 { margin:0 0 6px; font-size:13px; color:#0d9488; }
+      #qpaws-panel button { margin:4px 4px 0 0; padding:6px 10px; border:0;
+        border-radius:4px; cursor:pointer; font:600 12px sans-serif; }
+      #qpaws-panel .start { background:#0a7a3e; color:#fff; }
+      #qpaws-panel .stop  { background:#7B1E1E; color:#fff; }
+      #qpaws-panel .skip  { background:#b85c00; color:#fff; }
+      #qpaws-panel .reset { background:#444; color:#fff; }
+      #qpaws-status { margin-top:6px; font-size:12px; color:#F6F1E8; opacity:0.9;
+        word-break:break-all; }`;
+    const style = document.createElement('style');
+    style.textContent = css;
+    document.head.appendChild(style);
+
+    const wrap = document.createElement('div');
+    wrap.id = 'qpaws-panel';
+    const total = BUSINESSES.length;
+    const idx = GM_getValue(K_INDEX, 0);
+    const results = GM_getValue(K_RESULTS, []);
+    const ok = results.filter(r => r && r.ok).length;
+    const isRunning = GM_getValue(K_RUNNING, false);
+
+    wrap.innerHTML =
+      '<h4>QatarPaws image rescue</h4>' +
+      '<div>' + total + ' businesses · ' + idx + ' processed · ' + ok + ' downloaded</div>' +
+      '<div>' +
+        (isRunning
+          ? '<button class="stop" id="qpaws-stop">⏸ Pause</button>'
+          : '<button class="start" id="qpaws-start">▶ ' + (idx > 0 ? 'Resume' : 'Start') + '</button>'
+        ) +
+        '<button class="skip" id="qpaws-skip">⏭ Skip</button>' +
+        '<button class="reset" id="qpaws-reset">Reset</button>' +
+      '</div>' +
+      '<div id="qpaws-status"></div>';
+
+    document.body.appendChild(wrap);
+
+    const startBtn = document.getElementById('qpaws-start');
+    if (startBtn) startBtn.addEventListener('click', () => {
+      GM_setValue(K_RUNNING, true);
+      const startIdx = GM_getValue(K_INDEX, 0);
+      if (startIdx >= BUSINESSES.length) GM_setValue(K_INDEX, 0);
+      location.href = BUSINESSES[GM_getValue(K_INDEX, 0)].mapsUrl;
+    });
+    const stopBtn = document.getElementById('qpaws-stop');
+    if (stopBtn) stopBtn.addEventListener('click', () => {
+      GM_setValue(K_RUNNING, false);
+      updateStatus('Paused at index ' + GM_getValue(K_INDEX, 0));
+    });
+    const skipBtn = document.getElementById('qpaws-skip');
+    if (skipBtn) skipBtn.addEventListener('click', () => {
+      const i = GM_getValue(K_INDEX, 0);
+      if (i >= BUSINESSES.length) {
+        updateStatus('Nothing to skip — already done.');
+        return;
+      }
+      // Mark the current biz as skipped, advance, and either continue or pause.
+      const biz = BUSINESSES[i];
+      const results = GM_getValue(K_RESULTS, []);
+      results[i] = {
+        idx: i, slug: biz.slug, name: biz.name, ok: false,
+        filename: null, url: null, width: null, height: null, source: null,
+        error: 'manually skipped',
+      };
+      GM_setValue(K_RESULTS, results);
+      GM_setValue(K_INDEX, i + 1);
+      GM_deleteValue(K_NAV_ATTEMPTS);
+      GM_deleteValue(K_NAV_INDEX);
+      if (GM_getValue(K_RUNNING, false) && i + 1 < BUSINESSES.length) {
+        location.href = BUSINESSES[i + 1].mapsUrl;
+      } else {
+        location.reload();
+      }
+    });
+    const resetBtn = document.getElementById('qpaws-reset');
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+      if (!confirm('Reset progress? You will lose the queue position and ' +
+                   'in-memory manifest. Files in Downloads stay.')) return;
+      GM_deleteValue(K_RUNNING);
+      GM_deleteValue(K_INDEX);
+      GM_deleteValue(K_RESULTS);
+      location.reload();
+    });
+  }
+
+  function updateStatus(msg) {
+    const el = document.getElementById('qpaws-status');
+    if (el) el.textContent = msg;
+    console.log('[qpaws] ' + msg);
+  }
+})();

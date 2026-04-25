@@ -154,6 +154,7 @@ UI = {
         "biz_more_google":"See more reviews on Google",
         "biz_address":"Address", "biz_phone":"Phone",
         "biz_rating":"Rating",
+        "photo_credit":"Photo via Google Maps",
         "page_results":"results",
         "top_rated":"Top rated",
         "editors_pick":"Editor's pick",
@@ -214,6 +215,7 @@ UI = {
         "biz_more_google":"المزيد من التقييمات على جوجل",
         "biz_address":"العنوان", "biz_phone":"الهاتف",
         "biz_rating":"التقييم",
+        "photo_credit":"الصورة من خرائط جوجل",
         "page_results":"نتيجة",
         "top_rated":"الأعلى تقييمًا",
         "editors_pick":"اختيار المحرّر",
@@ -396,14 +398,12 @@ def extract_business(filepath: Path) -> dict | None:
     mweb = WEBSITE_RE.search(raw)
     b["website"] = mweb.group(1) if mweb else ""
 
-    # Photos (inside .photos-row)
-    photos = []
-    pr = PHOTOS_ROW_RE.search(raw)
-    if pr:
-        photos = PHOTO_IMG_RE.findall(pr.group(1))
-    # Dedup but preserve order
-    seen = set()
-    b["photos"] = [p for p in photos if not (p in seen or seen.add(p))]
+    # Image + photos source-of-truth: the local watermarked /images/<slug>.jpg.
+    # The Google Maps lh3 URLs are dead (403 from CDN), so we ignore whatever
+    # was in the old JSON-LD and check for a real file we host ourselves.
+    local_jpg = ROOT / "images" / f"{b['slug']}.jpg"
+    b["image"] = f"/images/{b['slug']}.jpg" if local_jpg.exists() else ""
+    b["photos"] = []  # photos-row no longer rendered (no per-business gallery)
 
     # Reviews
     reviews = []
@@ -534,7 +534,6 @@ def head_block(*, lang: str, title: str, description: str, path: str,
 <link rel="alternate" hreflang="x-default" href="{SITE}/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="dns-prefetch" href="https://lh3.googleusercontent.com">
 <link rel="dns-prefetch" href="https://maps.google.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="preload" href="/css/style.css" as="style">
@@ -1075,12 +1074,15 @@ def build_business(b: dict, all_businesses: list[dict]) -> str:
         facts.append(f'<div class="fact">{SVG["phone"]}<div><span class="k">{esc(t["biz_phone"])}</span><span class="v" dir="ltr">{esc(b["phone"])}</span></div></div>')
     facts_html = "\n".join(facts)
 
-    # Hero media
+    # Hero media — local watermarked image if we have one, else branded placeholder
     if b["image"]:
-        media = f'<img src="{esc(b["image"])}" alt="{esc(b["name"])}" referrerpolicy="no-referrer" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
-        media += '<div class="ph" style="display:none"><span>QATARPAWS</span></div>'
+        media = (f'<img src="{esc(b["image"])}" alt="{esc(b["name"])}" '
+                 f'loading="lazy" '
+                 f'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+                 f'<div class="ph" style="display:none"><span>qatarpaws.com</span></div>'
+                 f'<small class="photo-credit">{esc(t["photo_credit"])}</small>')
     else:
-        media = '<div class="ph"><span>QATARPAWS</span></div>'
+        media = '<div class="ph"><span>qatarpaws.com</span></div>'
 
     rating_pill = ""
     if b["rating"] > 0:
@@ -1168,7 +1170,7 @@ def build_business(b: dict, all_businesses: list[dict]) -> str:
     if b["lat"] and b["lng"]: ld_lb["geo"] = {"@type":"GeoCoordinates","latitude":str(b["lat"]),"longitude":str(b["lng"])}
     if b["rating"] and b["review_count"]:
         ld_lb["aggregateRating"] = {"@type":"AggregateRating","ratingValue":f"{b['rating']:.1f}","reviewCount":str(b["review_count"])}
-    if b["image"]: ld_lb["image"] = b["image"]
+    if b["image"]: ld_lb["image"] = SITE + b["image"]
 
     ld_bc = {
         "@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
@@ -1291,6 +1293,9 @@ def build_about(lang: str) -> str:
 
 <h2>Bilingual by default</h2>
 <p>Every page is available in English and Arabic. We serve Qatar's diverse community, not a subset of it.</p>
+
+<h2>Photos &amp; takedown policy</h2>
+<p>Photos shown on listings are sourced from publicly available Google Maps pages to help visitors recognize each business. We do not claim ownership of any photo. If you are the owner of a business or photo featured here and want it updated or removed, email us at <a href="mailto:qatarpaw@gmail.com">qatarpaw@gmail.com</a> — we'll respond within 7 days.</p>
 """
     else:
         body_prose = """
@@ -1317,6 +1322,9 @@ def build_about(lang: str) -> str:
 
 <h2>ثنائي اللغة افتراضيًا</h2>
 <p>كلّ صفحة متوفّرة بالإنجليزية والعربية. نخدم مجتمع قطر المتنوّع بالكامل.</p>
+
+<h2>الصور وسياسة الإزالة</h2>
+<p>الصور المعروضة في القوائم مأخوذة من صفحات خرائط جوجل المتاحة للعموم لمساعدة الزوّار على التعرّف على كلّ نشاط. نحن لا ندّعي ملكية أيّ صورة. إذا كنت صاحب نشاط أو صورة معروضة هنا وتريد تحديثها أو إزالتها، راسلنا على <a href="mailto:qatarpaw@gmail.com">qatarpaw@gmail.com</a> — سنردّ خلال 7 أيام.</p>
 """
 
     body = f"""<body>

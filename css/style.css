@@ -409,6 +409,8 @@ svg{flex-shrink:0}
 [dir="rtl"] .biz-hero-v2 .media .rating-pill{right:auto;left:14px}
 .biz-hero-v2 .media .rating-pill svg{color:var(--gold-500)}
 .biz-hero-v2 .media .rating-pill em{font-style:normal;color:var(--ink-500);font-weight:400;font-size:12px}
+.biz-hero-v2 .media .photo-credit{position:absolute;left:14px;bottom:14px;background:rgba(20,18,16,.72);color:var(--sand-50);font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;padding:4px 8px;border-radius:6px;z-index:2}
+[dir="rtl"] .biz-hero-v2 .media .photo-credit{left:auto;right:14px}
 
 .biz-hero-v2 .info{display:flex;flex-direction:column;gap:18px;padding:6px 0}
 .biz-hero-v2 .cat-kicker{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--maroon-600);font-weight:500}
