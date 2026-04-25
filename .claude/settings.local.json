@@ -67,7 +67,10 @@
       "Bash(curl -sI --max-time 15 \"https://qatarpaws.com/ar/business/healthy-pet-center-%D8%B9%D9%8A%D8%A7%D8%AF%D8%A9-%D9%87%D9%8A%D9%84%D8%AB%D9%8A-%D8%A8%D8%AA-%D8%B3%D9%86%D8%AA%D8%B1\")",
       "Bash(curl -sL --max-time 15 \"https://qatarpaws.com/ar/business/healthy-pet-center-%D8%B9%D9%8A%D8%A7%D8%AF%D8%A9-%D9%87%D9%8A%D9%84%D8%AB%D9%8A-%D8%A8%D8%AA-%D8%B3%D9%86%D8%AA%D8%B1\")",
       "Bash(PYTHONIOENCODING=utf-8 python -X utf8 scripts/make_image_rescue_script.py)",
-      "Bash(grep -oE '\\\\{\"slug\":\"[^\"]+\",\"idx\":[0-9]+,\"token\":\"[^\"]+\",\"url\":\"[^\"]+\"\\\\}' scripts/image_rescue.js)"
+      "Bash(grep -oE '\\\\{\"slug\":\"[^\"]+\",\"idx\":[0-9]+,\"token\":\"[^\"]+\",\"url\":\"[^\"]+\"\\\\}' scripts/image_rescue.js)",
+      "Bash(python3)",
+      "Bash(grep -E \"\\\\.html$\")",
+      "Bash(git log *)"
     ],
     "deny": [],
     "ask": []

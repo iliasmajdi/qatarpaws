@@ -84,9 +84,7 @@ def extract_business_data(filepath):
 def main():
     businesses = []
 
-    # Process English business pages
-    os.chdir('business')
-    for filepath in glob.glob('*.html'):
+    for filepath in glob.glob('business/*.html'):
         try:
             business = extract_business_data(filepath)
             if business.get('name'):
@@ -95,9 +93,7 @@ def main():
         except Exception as e:
             print(f"Error processing {filepath}: {e}")
 
-    # Process Arabic business pages
-    os.chdir('../ar/business')
-    for filepath in glob.glob('*.html'):
+    for filepath in glob.glob('ar/business/*.html'):
         try:
             business = extract_business_data(filepath)
             if business.get('name'):
@@ -106,11 +102,8 @@ def main():
         except Exception as e:
             print(f"Error processing {filepath}: {e}")
 
-    # Sort by rating descending
     businesses.sort(key=lambda x: x.get('rating', 0), reverse=True)
 
-    # Write to JSON file
-    os.chdir('../..')
     output_path = 'js/search-data.json'
     os.makedirs('js', exist_ok=True)
 

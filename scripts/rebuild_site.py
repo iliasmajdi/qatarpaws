@@ -32,6 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 os.chdir(ROOT)
 
 GA_ID = "G-Y7EYH2SNTV"
+GSC_VERIFICATION = "5W6O91g8x0DMRozumfcRBeyeddZUbQ9ZIKpLukY6bIg"
 SITE = "https://qatarpaws.com"
 BUILD_DATE = date.today().isoformat()
 
@@ -551,7 +552,7 @@ def head_block(*, lang: str, title: str, description: str, path: str,
   gtag('config', '{GA_ID}');
 </script>
 <!-- Google Search Console -->
-<meta name="google-site-verification" content="PLACEHOLDER_VERIFICATION_CODE">
+<meta name="google-site-verification" content="{GSC_VERIFICATION}">
 </head>"""
 
 
@@ -1102,7 +1103,7 @@ def build_business(b: dict, all_businesses: list[dict]) -> str:
     # Photos
     photos_html = ""
     if b["photos"]:
-        imgs = "".join(f'<img src="{esc(p)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">' for p in b["photos"][:12])
+        imgs = "".join(f'<img src="{esc(p)}" alt="{esc(b["name"])}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">' for p in b["photos"][:12])
         photos_html = f"""<section class="biz-section">
 <div class="wrap">
 <h2>{esc(t['biz_photos'])}</h2>
